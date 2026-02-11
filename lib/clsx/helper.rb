@@ -49,6 +49,8 @@ module Clsx
         elsif klass == Hash
           return clsx_simple_hash(arg)
         end
+      elsif args.size == 2
+        return clsx_string_hash(args[0], args[1]) if args[0].class == String && args[1].class == Hash # rubocop:disable Style/ClassEqualityComparison
       end
 
       seen = {}
@@ -61,32 +63,61 @@ module Clsx
 
     private
 
+    # Hash-only path — no dedup hash needed (hash keys are unique by definition).
+    # Builds result string directly with <<.
     # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/PerceivedComplexity
     def clsx_simple_hash(hash)
       return nil if hash.empty?
 
-      seen = {}
+      buf = nil
       hash.each do |key, value|
         next unless value
 
         klass = key.class
-
         if klass == Symbol
-          seen[key.name] = true
+          str = key.name
+          buf ? (buf << ' ' << str) : (buf = String.new(str))
         elsif klass == String
-          seen[key] = true unless key.empty?
+          next if key.empty?
+
+          buf ? (buf << ' ' << key) : (buf = String.new(key))
         else
-          # Complex key - fall back to full processing
           seen = {}
           clsx_process([hash], seen)
           return seen.empty? ? nil : seen.keys.join(' ')
         end
       end
-
-      seen.empty? ? nil : seen.keys.join(' ')
+      buf
     end
+    # rubocop:enable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/PerceivedComplexity
 
-    # rubocop:disable Style/MultipleComparison
+    # String + Hash fast path: clsx('base', active: cond).
+    # Builds result string directly, dedup only against base string.
+    # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/PerceivedComplexity
+    def clsx_string_hash(str, hash)
+      return clsx_simple_hash(hash) if str.empty?
+
+      buf = String.new(str)
+      hash.each do |key, value|
+        next unless value
+
+        klass = key.class
+        if klass == Symbol
+          s = key.name
+          buf << ' ' << s unless s == str
+        elsif klass == String
+          buf << ' ' << key unless key.empty? || key == str
+        else
+          seen = { str => true }
+          clsx_process([hash], seen)
+          return seen.size == 1 ? str : seen.keys.join(' ')
+        end
+      end
+      buf
+    end
+    # rubocop:enable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/PerceivedComplexity
+
+    # rubocop:disable Style/MultipleComparison, Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/PerceivedComplexity
     def clsx_process(args, seen)
       deferred = nil
 
