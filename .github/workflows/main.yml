@@ -1,0 +1,37 @@
+name: CI
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Ruby ${{ matrix.ruby_version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby_version: [ruby-head, '3.4', '3.3', '3.2']
+
+    env:
+      COVERAGE: true
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ matrix.ruby_version }}
+        bundler-cache: true
+      continue-on-error: ${{ matrix.ruby_version == 'ruby-head' }}
+
+    - run: bundle exec rake
+      continue-on-error: ${{ matrix.ruby_version == 'ruby-head' }}
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v4.0.1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        slug: svyatov/clsx-ruby
+      if: ${{ matrix.ruby_version == '3.4' }}
