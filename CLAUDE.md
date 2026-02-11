@@ -29,6 +29,11 @@ bundle exec ruby benchmark/run.rb
 
 # Install dependencies
 bin/setup
+
+# Release a new version (update version.rb first)
+# Builds gem, creates git tag, pushes to rubygems.org
+# OTP is fetched automatically from 1Password
+bundle exec rake release
 ```
 
 ## Architecture
