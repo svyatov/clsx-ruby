@@ -1,6 +1,9 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
 
 permissions:
   contents: read
@@ -12,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ruby_version: [ruby-head, '3.4', '3.3', '3.2']
+        ruby_version: [ruby-head, '4.0', '3.4', '3.3', '3.2']
 
     env:
       COVERAGE: true
@@ -34,4 +37,4 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         slug: svyatov/clsx-ruby
-      if: ${{ matrix.ruby_version == '3.4' }}
+      if: ${{ matrix.ruby_version == '4.0' }}
