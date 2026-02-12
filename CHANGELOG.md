@@ -1,6 +1,17 @@
 # Changelog
 
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
 ## Unreleased
+
+### Added
+
+- YARD documentation to all public and private methods
+
+### Changed
 
 - Replaced `class ==` type checks with idiomatic `is_a?` early returns
 - Extracted `clsx_single` method for clearer single-argument dispatch
@@ -11,12 +22,19 @@
 
 ## v1.1.0
 
-- Optimized hash-only path: skip dedup Hash since hash keys are unique by definition (+8%)
+### Added
+
 - New fast path for `clsx('base', active: cond)` string + hash pattern (+69%)
-- Added `string + hash` benchmark scenario
+- `string + hash` benchmark scenario
+
+### Changed
+
+- Optimized hash-only path: skip dedup Hash since hash keys are unique by definition (+8%)
 - Use `str.dup` instead of `String.new(str)` for buffer init (+12-18% on hash paths)
 
 ## v1.0.0
+
+### Added
 
 - Initial release as standalone framework-agnostic gem
 - Extracted from clsx-rails v2.0.0
