@@ -61,6 +61,18 @@ The helper uses an optimized algorithm with fast-paths for common cases (single 
 - Ignores `Proc`/lambda objects and boolean `true` values
 - Supports complex hash keys like `{ %w[foo bar] => true }` which resolve recursively
 
+## Benchmarking
+
+`benchmark/original.rb` contains the **previous version** of the algorithm for comparison. It must always reflect the last committed version from the main branch — not some ancient baseline.
+
+**Rule:** Before making any algorithm or performance change to `lib/clsx/helper.rb`, copy the current main-branch implementation into `benchmark/original.rb` (wrapping in `module ClsxOriginal` — method names stay the same, no renaming needed). This ensures `bundle exec ruby benchmark/run.rb` compares the new code against its immediate predecessor, giving meaningful before/after numbers.
+
+## Changelog
+
+`CHANGELOG.md` must stay current on every feature branch. After each commit, ensure the `## Unreleased` section at the top of `CHANGELOG.md` accurately reflects all user-facing changes on the branch. Add the section if it doesn't exist. Keep entries concise — one bullet per logical change. On release, the `## Unreleased` heading gets replaced with the version number.
+
+The unreleased section describes the **net result** compared to the last release, not a history of intermediate steps. When a later change supersedes an earlier one, update or remove the stale bullet — don't accumulate entries that no longer reflect reality.
+
 ## Commit Convention
 
 Uses [Conventional Commits](https://www.conventionalcommits.org/): `feat`, `fix`, `perf`, `chore`, `docs`, `refactor`

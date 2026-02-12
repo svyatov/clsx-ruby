@@ -13,11 +13,4 @@ module Clsx
 end
 
 # Short alias — only defined if `Cn` is not already taken
-unless Object.const_defined?(:Cn)
-  # :nodoc:
-  module Cn
-    def self.[](*)
-      Clsx[*]
-    end
-  end
-end
+Cn = Clsx unless Object.const_defined?(:Cn)

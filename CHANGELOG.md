@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Replaced `class ==` type checks with idiomatic `is_a?` early returns
+- Extracted `clsx_single` method for clearer single-argument dispatch
+- Simplified `Cn` alias from wrapper module to `Cn = Clsx`
+- Removed redundant `seen.key?` guards in `clsx_process`
+- Moved inline rubocop disables to `.rubocop.yml` config
+- Updated benchmark baseline to compare against previous version, not ancient one
+
 ## v1.1.0
 
 - Optimized hash-only path: skip dedup Hash since hash keys are unique by definition (+8%)

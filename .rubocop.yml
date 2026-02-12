@@ -24,6 +24,7 @@ Metrics/MethodLength:
   Max: 15
   Exclude:
     - 'test/**/*_test.rb'
+    - 'lib/clsx/helper.rb'
 
 Metrics/ClassLength:
   Exclude:
@@ -32,6 +33,19 @@ Metrics/ClassLength:
 Metrics/AbcSize:
   Exclude:
     - 'test/**/*_test.rb'
+    - 'lib/clsx/helper.rb'
+
+Metrics/CyclomaticComplexity:
+  Exclude:
+    - 'lib/clsx/helper.rb'
+
+Metrics/PerceivedComplexity:
+  Exclude:
+    - 'lib/clsx/helper.rb'
+
+Metrics/BlockNesting:
+  Exclude:
+    - 'lib/clsx/helper.rb'
 
 Lint/LiteralAsCondition:
   Exclude:
