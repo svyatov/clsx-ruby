@@ -76,11 +76,11 @@ module Clsx
         klass = key.class
         if klass == Symbol
           str = key.name
-          buf ? (buf << ' ' << str) : (buf = String.new(str))
+          buf ? (buf << ' ' << str) : (buf = str.dup)
         elsif klass == String
           next if key.empty?
 
-          buf ? (buf << ' ' << key) : (buf = String.new(key))
+          buf ? (buf << ' ' << key) : (buf = key.dup)
         else
           seen = {}
           clsx_process([hash], seen)
@@ -97,7 +97,7 @@ module Clsx
     def clsx_string_hash(str, hash)
       return clsx_simple_hash(hash) if str.empty?
 
-      buf = String.new(str)
+      buf = str.dup
       hash.each do |key, value|
         next unless value
 
