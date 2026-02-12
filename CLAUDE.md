@@ -65,7 +65,7 @@ The helper uses an optimized algorithm with fast-paths for common cases (single 
 
 `benchmark/original.rb` contains the **previous version** of the algorithm for comparison. It must always reflect the last committed version from the main branch — not some ancient baseline.
 
-**Rule:** Before making any algorithm or performance change to `lib/clsx/helper.rb`, copy the current main-branch implementation into `benchmark/original.rb` (renaming methods to `clsx_original`, `clsx_original_*`). This ensures `bundle exec ruby benchmark/run.rb` compares the new code against its immediate predecessor, giving meaningful before/after numbers.
+**Rule:** Before making any algorithm or performance change to `lib/clsx/helper.rb`, copy the current main-branch implementation into `benchmark/original.rb` (wrapping in `module ClsxOriginal` — method names stay the same, no renaming needed). This ensures `bundle exec ruby benchmark/run.rb` compares the new code against its immediate predecessor, giving meaningful before/after numbers.
 
 ## Commit Convention
 

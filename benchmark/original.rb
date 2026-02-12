@@ -5,7 +5,7 @@
 # lib/clsx/helper.rb methods here so benchmarks compare against
 # the last committed version, not an ancient baseline.
 module ClsxOriginal
-  def clsx_original(*args)
+  def clsx(*args)
     return nil if args.empty?
 
     if args.size == 1
@@ -21,20 +21,20 @@ module ClsxOriginal
         arg.each { |s| seen[s] = true unless s.empty? || seen.key?(s) }
         return seen.empty? ? nil : seen.keys.join(' ')
       elsif klass == Hash
-        return clsx_original_simple_hash(arg)
+        return clsx_simple_hash(arg)
       end
     elsif args.size == 2
-      return clsx_original_string_hash(args[0], args[1]) if args[0].class == String && args[1].class == Hash
+      return clsx_string_hash(args[0], args[1]) if args[0].class == String && args[1].class == Hash
     end
 
     seen = {}
-    clsx_original_process(args, seen)
+    clsx_process(args, seen)
     seen.empty? ? nil : seen.keys.join(' ')
   end
 
   private
 
-  def clsx_original_simple_hash(hash)
+  def clsx_simple_hash(hash)
     return nil if hash.empty?
 
     buf = nil
@@ -51,15 +51,15 @@ module ClsxOriginal
         buf ? (buf << ' ' << key) : (buf = key.dup)
       else
         seen = {}
-        clsx_original_process([hash], seen)
+        clsx_process([hash], seen)
         return seen.empty? ? nil : seen.keys.join(' ')
       end
     end
     buf
   end
 
-  def clsx_original_string_hash(str, hash)
-    return clsx_original_simple_hash(hash) if str.empty?
+  def clsx_string_hash(str, hash)
+    return clsx_simple_hash(hash) if str.empty?
 
     buf = str.dup
     hash.each do |key, value|
@@ -73,14 +73,14 @@ module ClsxOriginal
         buf << ' ' << key unless key.empty? || key == str
       else
         seen = { str => true }
-        clsx_original_process([hash], seen)
+        clsx_process([hash], seen)
         return seen.size == 1 ? str : seen.keys.join(' ')
       end
     end
     buf
   end
 
-  def clsx_original_process(args, seen)
+  def clsx_process(args, seen)
     deferred = nil
 
     args.each do |arg|
@@ -92,7 +92,7 @@ module ClsxOriginal
         str = arg.name
         seen[str] = true unless seen.key?(str)
       elsif klass == Array
-        clsx_original_process(arg, seen)
+        clsx_process(arg, seen)
       elsif klass == Hash
         arg.each { |key, value| (deferred ||= []) << key if value }
       elsif klass == Integer || klass == Float
@@ -106,6 +106,6 @@ module ClsxOriginal
       end
     end
 
-    clsx_original_process(deferred, seen) if deferred
+    clsx_process(deferred, seen) if deferred
   end
 end

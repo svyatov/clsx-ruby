@@ -16,7 +16,7 @@ Original = Object.new.extend(ClsxOriginal)
 
 # Verify correctness before benchmarking
 optimized_result = Optimized.clsx(*BD::COMPLEX).split.sort
-original_result = Original.clsx_original(*BD::COMPLEX).split.sort
+original_result = Original.clsx(*BD::COMPLEX).split.sort
 
 unless optimized_result == original_result
   warn 'ERROR: Optimized version produces different result!'
@@ -31,7 +31,7 @@ puts '=' * 60
 BD::BENCHMARKS.each do |name, args|
   puts
   Benchmark.ips do |x|
-    x.report("#{name} (original)") { Original.clsx_original(*args) }
+    x.report("#{name} (original)") { Original.clsx(*args) }
     x.report("#{name} (optimized)") { Optimized.clsx(*args) }
     x.compare!
   end
