@@ -67,6 +67,10 @@ The helper uses an optimized algorithm with fast-paths for common cases (single 
 
 **Rule:** Before making any algorithm or performance change to `lib/clsx/helper.rb`, copy the current main-branch implementation into `benchmark/original.rb` (wrapping in `module ClsxOriginal` — method names stay the same, no renaming needed). This ensures `bundle exec ruby benchmark/run.rb` compares the new code against its immediate predecessor, giving meaningful before/after numbers.
 
+## Changelog
+
+`CHANGELOG.md` must stay current on every feature branch. After each commit, ensure the `## Unreleased` section at the top of `CHANGELOG.md` accurately reflects all user-facing changes on the branch. Add the section if it doesn't exist. Keep entries concise — one bullet per logical change. On release, the `## Unreleased` heading gets replaced with the version number.
+
 ## Commit Convention
 
 Uses [Conventional Commits](https://www.conventionalcommits.org/): `feat`, `fix`, `perf`, `chore`, `docs`, `refactor`
