@@ -8,6 +8,7 @@
 - Removed redundant `seen.key?` guards in `clsx_process`
 - Moved inline rubocop disables to `.rubocop.yml` config
 - Updated benchmark baseline to compare against previous version, not ancient one
+- Added YARD documentation to all public and private methods
 
 ## v1.1.0
 

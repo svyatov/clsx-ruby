@@ -1,30 +1,29 @@
 # frozen_string_literal: true
 
-# :nodoc:
 module Clsx
-  # :nodoc:
+  # Mixin providing {#clsx} and {#cn} instance methods.
+  #
+  # @example
+  #   include Clsx::Helper
+  #   clsx('btn', active: @active)  # => "btn active"
   module Helper
-    # The clsx function can take any number of arguments,
-    # each of which can be Hash, Array, Boolean, String, or Symbol.
+    # Build a CSS class string from an arbitrary mix of arguments.
     #
-    # **Important**
-    # Any falsy values are discarded! Standalone Boolean values are discarded as well.
+    # Falsy values (+nil+, +false+) and standalone +true+ are discarded.
+    # Duplicates are eliminated. Returns +nil+ (not +""+) when no classes apply.
     #
-    # @param [Mixed] args
+    # @param args [String, Symbol, Hash, Array, Numeric, nil, false] class descriptors
+    #   to merge into a single space-separated string
+    # @return [String] space-joined class string
+    # @return [nil] when no classes apply
     #
-    # @return [String] the joined class names
+    # @example Strings and hashes
+    #   clsx('foo', 'bar')                      # => "foo bar"
+    #   clsx(foo: true, bar: false, baz: true)  # => "foo baz"
     #
-    # @example
-    #   clsx('foo', 'bar') # => 'foo bar'
-    #   clsx(true, { bar: true }) # => 'bar'
-    #   clsx('foo', { bar: false }) # => 'foo'
-    #   clsx({ bar: true }, 'baz', { bat: false }) # => 'bar baz'
-    #
-    # @example within a view
-    #   <div class="<%= clsx('foo', 'bar') %>">
-    #   <div class="<%= clsx('foo', active: @is_active, 'another-class' => @condition) %>">
-    #   <%= tag.div class: clsx(%w[foo bar], hidden: @condition) do ... end %>
-
+    # @example Nested arrays
+    #   clsx('a', ['b', nil, ['c']])            # => "a b c"
+    #   clsx(%w[foo bar], hidden: true)         # => "foo bar hidden"
     def clsx(*args)
       return nil if args.empty?
       return clsx_single(args[0]) if args.size == 1
@@ -35,10 +34,17 @@ module Clsx
       seen.empty? ? nil : seen.keys.join(' ')
     end
 
+    # (see #clsx)
     alias cn clsx
 
     private
 
+    # Single-argument fast path — dispatches by type to avoid allocating
+    # a +seen+ hash when possible.
+    #
+    # @param arg [String, Symbol, Hash, Array] single class descriptor
+    # @return [String] resolved class string
+    # @return [nil] when the argument produces no classes
     def clsx_single(arg)
       return (arg.empty? ? nil : arg) if arg.is_a?(String)
       return arg.name if arg.is_a?(Symbol)
@@ -55,8 +61,12 @@ module Clsx
       seen.empty? ? nil : seen.keys.join(' ')
     end
 
-    # Hash-only path — no dedup hash needed (hash keys are unique by definition).
-    # Builds result string directly with <<.
+    # Hash-only fast path — no dedup needed since hash keys are unique.
+    # Falls back to {#clsx_process} on non-String/Symbol keys.
+    #
+    # @param hash [Hash{String, Symbol => Boolean}] class-name => condition pairs
+    # @return [String] resolved class string
+    # @return [nil] when no hash values are truthy
     def clsx_simple_hash(hash)
       return nil if hash.empty?
 
@@ -80,8 +90,13 @@ module Clsx
       buf
     end
 
-    # String + Hash fast path: clsx('base', active: cond).
-    # Builds result string directly, dedup only against base string.
+    # Fast path for +clsx('base', active: cond)+ — deduplicates only against
+    # the base string. Falls back to {#clsx_process} on non-String/Symbol keys.
+    #
+    # @param str [String] base class name
+    # @param hash [Hash{String, Symbol => Boolean}] class-name => condition pairs
+    # @return [String] resolved class string
+    # @return [nil] when no classes apply
     def clsx_string_hash(str, hash)
       return clsx_simple_hash(hash) if str.empty?
 
@@ -103,6 +118,12 @@ module Clsx
       buf
     end
 
+    # General-purpose recursive walker. Hash values are deferred and processed
+    # after flat args so that hash keys resolve in a second pass.
+    #
+    # @param args [Array<String, Symbol, Hash, Array, Numeric, nil, false>] nested arguments
+    # @param seen [Hash{String => true}] accumulator for deduplication
+    # @return [void]
     def clsx_process(args, seen)
       deferred = nil
 
