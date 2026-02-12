@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - YARD documentation to all public and private methods
+- Rails 8.1.2 `class_names` as a third benchmark competitor
+- ViewComponent and Phlex examples in README
 
 ### Changed
 
@@ -19,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed redundant `seen.key?` guards in `clsx_process`
 - Moved inline rubocop disables to `.rubocop.yml` config
 - Updated benchmark baseline to compare against previous version, not ancient one
+- Rewrote README with benchmark numbers and feature comparison table
 
 ## v1.1.0
 
