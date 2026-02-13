@@ -50,15 +50,25 @@ module Clsx
       return arg.name if arg.is_a?(Symbol)
       return clsx_simple_hash(arg) if arg.is_a?(Hash)
 
-      if arg.is_a?(Array) && arg.all?(String)
+      if arg.is_a?(Array)
+        return nil if arg.empty?
+
+        if arg.all?(String)
+          seen = {}
+          arg.each { |s| seen[s] = true unless s.empty? }
+          return seen.empty? ? nil : seen.keys.join(' ')
+        end
+
         seen = {}
-        arg.each { |s| seen[s] = true unless s.empty? }
+        clsx_process(arg, seen)
         return seen.empty? ? nil : seen.keys.join(' ')
       end
 
-      seen = {}
-      clsx_process([arg], seen)
-      seen.empty? ? nil : seen.keys.join(' ')
+      return arg.to_s if arg.is_a?(Numeric)
+      return nil if !arg || arg == true || arg.is_a?(Proc)
+
+      str = arg.to_s
+      str.empty? ? nil : str
     end
 
     # Hash-only fast path — no dedup needed since hash keys are unique.
@@ -138,7 +148,7 @@ module Clsx
           arg.each { |key, value| (deferred ||= []) << key if value }
         elsif arg.is_a?(Numeric)
           seen[arg.to_s] = true
-        elsif arg.nil? || arg == false || arg == true || arg.is_a?(Proc)
+        elsif !arg || arg == true || arg.is_a?(Proc)
           next
         else
           str = arg.to_s
