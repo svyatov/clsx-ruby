@@ -8,3 +8,5 @@
 /tmp/
 *.gem
 Gemfile.lock
+/benchmark/experiments.rb
+/benchmark/EXPERIMENTS.md
