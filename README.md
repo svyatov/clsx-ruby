@@ -3,7 +3,8 @@
 > The fastest Ruby utility for constructing CSS class strings conditionally.  
 > Perfect for Tailwind CSS utility classes. Zero dependencies.
 
-Ruby port of the JavaScript [clsx](https://github.com/lukeed/clsx) package — a faster, smarter alternative to Rails `class_names`. Works with Rails, Sinatra, Hanami, or plain Ruby.
+Ruby port of the JavaScript [clsx](https://github.com/lukeed/clsx) package — a faster, smarter alternative to Rails `class_names`.  
+Works with Rails, Sinatra, Hanami, or plain Ruby.
 
 ## Quick Start
 
