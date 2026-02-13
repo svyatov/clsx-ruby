@@ -1,6 +1,7 @@
 # clsx-ruby [![Gem Version](https://img.shields.io/gem/v/clsx-ruby)](https://rubygems.org/gems/clsx-ruby) [![Codecov](https://img.shields.io/codecov/c/github/svyatov/clsx-ruby)](https://app.codecov.io/gh/svyatov/clsx-ruby) [![CI](https://github.com/svyatov/clsx-ruby/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/svyatov/clsx-ruby/actions?query=workflow%3ACI) [![GitHub License](https://img.shields.io/github/license/svyatov/clsx-ruby)](LICENSE.txt)
 
-> The fastest Ruby utility for constructing CSS class strings conditionally. Perfect for Tailwind CSS utility classes. Zero dependencies.
+> The fastest Ruby utility for constructing CSS class strings conditionally.  
+> Perfect for Tailwind CSS utility classes. Zero dependencies.
 
 Ruby port of the JavaScript [clsx](https://github.com/lukeed/clsx) package — a faster, smarter alternative to Rails `class_names`. Works with Rails, Sinatra, Hanami, or plain Ruby.
 
