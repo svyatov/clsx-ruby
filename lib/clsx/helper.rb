@@ -128,15 +128,14 @@ module Clsx
       buf
     end
 
-    # General-purpose recursive walker. Hash values are deferred and processed
-    # after flat args so that hash keys resolve in a second pass.
+    # General-purpose recursive walker. Processes hash keys inline for simple
+    # types (String/Symbol) to avoid deferred-array allocation. Only complex
+    # keys (Array, nested Hash) recurse.
     #
     # @param args [Array<String, Symbol, Hash, Array, Numeric, nil, false>] nested arguments
     # @param seen [Hash{String => true}] accumulator for deduplication
     # @return [void]
     def clsx_process(args, seen)
-      deferred = nil
-
       args.each do |arg|
         if arg.is_a?(String)
           seen[arg] = true unless arg.empty?
@@ -145,7 +144,17 @@ module Clsx
         elsif arg.is_a?(Array)
           clsx_process(arg, seen)
         elsif arg.is_a?(Hash)
-          arg.each { |key, value| (deferred ||= []) << key if value }
+          arg.each do |key, value|
+            next unless value
+
+            if key.is_a?(Symbol)
+              seen[key.name] = true
+            elsif key.is_a?(String)
+              seen[key] = true unless key.empty?
+            else
+              clsx_process([key], seen)
+            end
+          end
         elsif arg.is_a?(Numeric)
           seen[arg.to_s] = true
         elsif !arg || arg == true || arg.is_a?(Proc)
@@ -155,8 +164,6 @@ module Clsx
           seen[str] = true unless str.empty?
         end
       end
-
-      clsx_process(deferred, seen) if deferred
     end
   end
 end

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - YARD documentation to all public and private methods
 - Rails 8.1.2 `class_names` as a third benchmark competitor
 - ViewComponent and Phlex examples in README
+- Memory benchmark scripts (`benchmark/memory.rb`, `benchmark/profile.rb`, `benchmark/stackprof_run.rb`)
 
 ### Changed
 
@@ -23,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Moved inline rubocop disables to `.rubocop.yml` config
 - Updated benchmark baseline to compare against previous version, not ancient one
 - Rewrote README with benchmark numbers and feature comparison table
+- New two-string fast path: `clsx('btn', 'active')` is ~2x faster with 3.5x fewer allocations
+- Extracted `clsx_process_hash` to avoid temporary array allocation in hash fallback paths
+- Process hash keys inline in `clsx_process` instead of deferring to a second pass (+23% mixed, +13% complex). Hash keys now appear in declaration order, matching JS clsx behavior.
 
 ## v1.1.0
 
