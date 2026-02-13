@@ -16,6 +16,8 @@ Or add it manually to the Gemfile:
 gem 'clsx-ruby', '~> 1.1'
 ```
 
+Then use it:
+
 ```ruby
 require 'clsx'
 
