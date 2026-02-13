@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - YARD documentation to all public and private methods
 - Rails 8.1.2 `class_names` as a third benchmark competitor
 - ViewComponent and Phlex examples in README
-- Memory benchmark scripts (`benchmark/memory.rb`, `benchmark/profile.rb`, `benchmark/stackprof_run.rb`)
+- Memory and profiling benchmark scripts (`benchmark/memory.rb`, `benchmark/profile.rb`, `benchmark/stackprof_run.rb`)
 
 ### Changed
 
