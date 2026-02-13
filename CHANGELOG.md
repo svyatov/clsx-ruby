@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Extracted `clsx_single` method for clearer single-argument dispatch
 - Simplified `Cn` alias from wrapper module to `Cn = Clsx`
 - Removed redundant `seen.key?` guards in `clsx_process`
+- Reduced allocations in `clsx_single`: pass arrays directly to `clsx_process` instead of wrapping, handle edge types inline
 - Moved inline rubocop disables to `.rubocop.yml` config
 - Updated benchmark baseline to compare against previous version, not ancient one
 - Rewrote README with benchmark numbers and feature comparison table

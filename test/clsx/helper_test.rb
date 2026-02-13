@@ -138,6 +138,7 @@ module Clsx
       obj = Object.new
       def obj.to_s = 'custom-class'
 
+      assert_equal 'custom-class', clsx(obj)
       assert_equal 'custom-class', clsx([obj])
       assert_equal 'foo custom-class', clsx('foo', [obj])
 
@@ -145,6 +146,7 @@ module Clsx
       empty_obj = Object.new
       def empty_obj.to_s = ''
 
+      assert_nil clsx(empty_obj)
       assert_nil clsx([empty_obj])
       assert_equal 'foo', clsx('foo', [empty_obj])
     end
