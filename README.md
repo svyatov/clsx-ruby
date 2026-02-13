@@ -1,6 +1,6 @@
 # clsx-ruby [![Gem Version](https://img.shields.io/gem/v/clsx-ruby)](https://rubygems.org/gems/clsx-ruby) [![CI](https://github.com/svyatov/clsx-ruby/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/svyatov/clsx-ruby/actions?query=workflow%3ACI) [![GitHub License](https://img.shields.io/github/license/svyatov/clsx-ruby)](LICENSE.txt)
 
-> The fastest Ruby utility for constructing CSS class strings conditionally. Zero dependencies.
+> The fastest Ruby utility for constructing CSS class strings conditionally. Perfect for Tailwind CSS utility classes. Zero dependencies.
 
 Ruby port of the JavaScript [clsx](https://github.com/lukeed/clsx) package — a faster, smarter alternative to Rails `class_names`. Works with Rails, Sinatra, Hanami, or plain Ruby.
 
@@ -27,6 +27,7 @@ Clsx['btn', 'btn-primary', active: is_active, disabled: is_disabled]
 |---|---|---|---|
 | Single string | 7.6M i/s | 911K i/s | **8.5x** |
 | String + hash | 2.4M i/s | 580K i/s | **4.1x** |
+| String array | 1.4M i/s | 357K i/s | **4.0x** |
 | Multiple strings | 1.5M i/s | 414K i/s | **3.7x** |
 | Hash | 2.2M i/s | 670K i/s | **3.3x** |
 | Mixed types | 852K i/s | 367K i/s | **2.3x** |
@@ -40,7 +41,6 @@ Clsx['btn', 'btn-primary', active: is_active, disabled: is_disabled]
 | Conditional classes | ✅ | ✅ |
 | Auto-deduplication | ✅ | ✅ |
 | Returns `nil` when empty | ✅ | ❌ (returns `""`) |
-| Nested arrays / any depth | ✅ | ❌ |
 | Complex hash keys | ✅ | ❌ |
 | Framework-agnostic | ✅ | Rails only |
 | Zero dependencies | ✅ | Requires ActionView |
@@ -132,6 +132,14 @@ Clsx[['foo', nil, false, 'bar']]
 Clsx[['foo'], ['', nil, false, 'bar'], [['baz', [['hello'], 'there']]]]
 # => 'foo bar baz hello there'
 
+# Symbols
+Clsx[:foo, :'bar-baz']
+# => 'foo bar-baz'
+
+# Numbers
+Clsx[1, 2, 3]
+# => '1 2 3'
+
 # Kitchen sink (with nesting)
 Clsx['foo', ['bar', { baz: false, bat: nil }, ['hello', ['world']]], 'cya']
 # => 'foo bar hello world cya'
@@ -172,6 +180,26 @@ end
 
 ```erb
 <div class="<%= classes %>">...</div>
+```
+
+### Tailwind CSS
+
+```ruby
+class NavLink < ViewComponent::Base
+  include Clsx::Helper
+
+  def initialize(active: false)
+    @active = active
+  end
+
+  def classes
+    clsx(
+      'px-3 py-2 rounded-md text-sm font-medium transition-colors',
+      'text-white bg-indigo-600': @active,
+      'text-gray-300 hover:text-white hover:bg-gray-700': !@active
+    )
+  end
+end
 ```
 
 ### Phlex
