@@ -10,6 +10,14 @@ Ruby port of the JavaScript [clsx](https://github.com/lukeed/clsx) package — a
 bundle add clsx-ruby
 ```
 
+Or add it manually to the Gemfile:
+
+```ruby
+gem 'clsx-ruby', '~> 1.1'
+```
+
+Then use it:
+
 ```ruby
 require 'clsx'
 
@@ -34,32 +42,21 @@ Clsx['btn', 'btn-primary', active: is_active, disabled: is_disabled]
 
 <sup>Ruby 4.0.1, Apple M1 Pro. Reproduce: `bundle exec ruby benchmark/run.rb`</sup>
 
-### Smarter than `class_names`
+### More feature-rich than `class_names`
 
 | Feature | clsx-ruby | Rails `class_names` |
 |---|---|---|
 | Conditional classes | ✅ | ✅ |
 | Auto-deduplication | ✅ | ✅ |
+| 3–8× faster | ✅ | ❌ |
 | Returns `nil` when empty | ✅ | ❌ (returns `""`) |
 | Complex hash keys | ✅ | ❌ |
-| Framework-agnostic | ✅ | Rails only |
-| Zero dependencies | ✅ | Requires ActionView |
+| Framework-agnostic | ✅ | ❌ |
+| Zero dependencies | ✅ | ❌ |
 
 ### Tiny footprint
 
 ~100 lines of code. Zero runtime dependencies. Ruby 3.2+.
-
-## Installation
-
-```bash
-bundle add clsx-ruby
-```
-
-Or add it manually to the Gemfile:
-
-```ruby
-gem 'clsx-ruby', '~> 1.1'
-```
 
 ## Usage
 
