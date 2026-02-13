@@ -42,7 +42,7 @@ Clsx['btn', 'btn-primary', active: is_active, disabled: is_disabled]
 
 <sup>Ruby 4.0.1, Apple M1 Pro. Reproduce: `bundle exec ruby benchmark/run.rb`</sup>
 
-### Smarter than `class_names`
+### More feature-rich than `class_names`
 
 | Feature | clsx-ruby | Rails `class_names` |
 |---|---|---|
