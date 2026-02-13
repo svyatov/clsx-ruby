@@ -6,14 +6,14 @@ source 'https://rubygems.org'
 gemspec
 
 # Specify your gem's development dependencies below
-gem 'benchmark', '~> 0.4'
+gem 'benchmark', '~> 0.5'
 gem 'benchmark-ips', '~> 2.14'
 gem 'benchmark-memory', '~> 0.2'
 gem 'memory_profiler', '~> 1.1'
 gem 'minitest', '~> 6.0'
-gem 'rake', '~> 13.2'
-gem 'rubocop', '~> 1.81'
+gem 'rake', '~> 13.3'
+gem 'rubocop', '~> 1.84'
 gem 'stackprof', '~> 0.2'
 
-gem 'simplecov', require: false
-gem 'simplecov-cobertura', require: false
+gem 'simplecov', '~> 0.22', require: false
+gem 'simplecov-cobertura', '~> 3.1', require: false
