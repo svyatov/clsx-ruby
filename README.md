@@ -1,10 +1,9 @@
 # clsx-ruby [![Gem Version](https://img.shields.io/gem/v/clsx-ruby)](https://rubygems.org/gems/clsx-ruby) [![Codecov](https://img.shields.io/codecov/c/github/svyatov/clsx-ruby)](https://app.codecov.io/gh/svyatov/clsx-ruby) [![CI](https://github.com/svyatov/clsx-ruby/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/svyatov/clsx-ruby/actions?query=workflow%3ACI) [![GitHub License](https://img.shields.io/github/license/svyatov/clsx-ruby)](LICENSE.txt)
 
-> The fastest Ruby utility for constructing CSS class strings conditionally.  
-> Perfect for Tailwind CSS utility classes. Zero dependencies.
+> The fastest, framework-agnostic conditional CSS class builder for Ruby.  
+> Perfect for ViewComponent, Phlex, Tailwind CSS or just standalone.
 
-Ruby port of the JavaScript [clsx](https://github.com/lukeed/clsx) package — a faster, smarter alternative to Rails `class_names`.  
-Works with Rails, Sinatra, Hanami, or plain Ruby.
+Inspired by the JavaScript [clsx](https://github.com/lukeed/clsx) package. Works with any Ruby codebase.
 
 ## Quick Start
 
@@ -27,11 +26,15 @@ Clsx['btn', 'btn-primary', active: is_active, disabled: is_disabled]
 # => "btn btn-primary active" (when is_active is truthy, is_disabled is falsy)
 ```
 
+## Rails Integration
+
+For Rails integration (adds `clsx` and `cn` helpers to all views), see [clsx-rails](https://github.com/svyatov/clsx-rails).
+
 ## Why clsx-ruby?
 
 ### Blazing fast
 
-**3–8x faster** than Rails `class_names` across every scenario:
+**3-8x faster** than Rails `class_names` across every scenario:
 
 | Scenario | clsx-ruby | Rails `class_names` | Speedup |
 |---|---|---|---|
@@ -244,10 +247,6 @@ end
    ```ruby
    Clsx['', proc {}, -> {}, nil, false, true] # => nil
    ```
-
-## Rails Integration
-
-For automatic Rails view helper integration (adds `clsx` and `cn` helpers to all views), see [clsx-rails](https://github.com/svyatov/clsx-rails).
 
 ## Development
 

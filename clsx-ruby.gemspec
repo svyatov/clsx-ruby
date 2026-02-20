@@ -8,8 +8,10 @@ Gem::Specification.new do |spec|
   spec.authors = ['Leonid Svyatov']
   spec.email = ['leonid@svyatov.com']
 
-  spec.summary = 'clsx / classnames for Ruby'
-  spec.description = 'A tiny utility for constructing CSS class strings conditionally'
+  spec.summary = 'The fastest conditional CSS class builder for Ruby'
+  spec.description = 'Build CSS class strings from conditional expressions, hashes, arrays, or nested structures. ' \
+                     'Framework-agnostic. Perfect for ViewComponent, Phlex, and Tailwind CSS. ' \
+                     'Works with any Ruby codebase.'
   spec.homepage = 'https://github.com/svyatov/clsx-ruby'
   spec.license = 'MIT'
   spec.required_ruby_version = '>= 3.2.0'
