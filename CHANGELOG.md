@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## v1.1.2
+
+### Changed
+
+- Improved gemspec description and README marketing copy
+- Switched gemspec to whitelist approach for included files
+
 ## v1.1.1
 
 ### Added
