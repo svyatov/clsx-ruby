@@ -149,15 +149,14 @@ module Clsx
       clsx_join(seen)
     end
 
-    # Fast path for +clsx('base', active: cond)+ pattern. Uses padded-string
-    # matching to detect overlap without Hash allocation.
+    # Fast path for +clsx('base', active: cond)+ pattern where base is a
+    # single token. Deduplicates via direct string comparison.
     #
     # @param str [String] base class name
     # @param hash [Hash] class-name => condition pairs
     # @return [String, nil]
     def clsx_str_hash(str, hash)
       buf = str.dup
-      padded = nil
       key_type = nil
 
       hash.each do |key, value|
@@ -171,7 +170,6 @@ module Clsx
           return clsx_str_hash_full(str, hash) if s.include?(' ')
 
           next if s == str
-          next if s.size < str.size && str.include?(s) && (padded ||= " #{str} ").include?(" #{s} ")
 
           buf << ' ' << s
         elsif key.is_a?(String)
@@ -183,7 +181,6 @@ module Clsx
           return clsx_str_hash_full(str, hash) if key.include?(' ')
 
           next if key == str
-          next if key.size < str.size && str.include?(key) && (padded ||= " #{str} ").include?(" #{key} ")
 
           buf << ' ' << key
         else

@@ -132,6 +132,9 @@ module Clsx
       assert_nil clsx({ [[[]]] => true })
       # Complex key with valid content
       assert_equal 'foo', clsx({ %w[foo] => true })
+      # Hash-as-key
+      assert_equal 'a', clsx({ { a: true } => true })
+      assert_equal 'a b', clsx({ { a: true } => true, { b: 1 } => true })
     end
 
     def test_with_custom_objects
@@ -149,6 +152,10 @@ module Clsx
       assert_nil clsx(empty_obj)
       assert_nil clsx([empty_obj])
       assert_equal 'foo', clsx('foo', [empty_obj])
+
+      # Custom object as hash key
+      assert_equal 'custom-class', clsx({ obj => true })
+      assert_equal 'custom-class foo', clsx({ obj => true, foo: true })
     end
 
     # Source: https://github.com/lukeed/clsx/blob/master/test/classnames.js
@@ -252,6 +259,15 @@ module Clsx
       assert_equal 'btn btn-primary active', clsx('btn btn-primary', active: true, btn: true)
       assert_equal 'btn btn-primary', clsx('btn btn-primary', 'btn' => true)
       assert_equal 'btn-primary btn', clsx('btn-primary', btn: true) # partial match — no dedup
+      # String keys in str+hash
+      assert_equal 'btn active', clsx('btn', 'active' => true)
+      assert_equal 'btn', clsx('btn', 'btn' => true)
+      # Complex key in str+hash
+      assert_equal 'btn foo', clsx('btn', %w[foo] => true)
+      # String keys in str+hash full (multi-token base)
+      assert_equal 'btn btn-primary active', clsx('btn btn-primary', 'active' => true)
+      # Complex key in str+hash full
+      assert_equal 'btn btn-primary foo', clsx('btn btn-primary', %w[foo] => true)
     end
 
     def test_simple_hash_with_space_in_string_key
