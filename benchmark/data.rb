@@ -27,14 +27,18 @@ module BenchmarkData
     { { { { { z: true } => true, y: true } => true, { x: 1 } => 2 } => true } => true }
   ].freeze
 
+  # String + hash with overlapping class — tests dedup across multi-token strings
+  STRING_HASH_OVERLAP = ['btn btn-primary', { active: true, btn: true }].freeze
+
   # Benchmark scenarios: name => args (will be splatted)
   BENCHMARKS = {
-    'single string' => [SINGLE_STRING],   # clsx('btn btn-primary')
-    'string array' => [STRINGS],          # clsx(%w[...])
-    'multiple strings' => STRINGS,        # clsx('btn', 'btn-primary', ...)
-    'hash' => [HASH],                      # clsx({ foo: true, ... })
-    'string + hash' => STRING_HASH,        # clsx('btn btn-primary', { active: true, ... })
-    'mixed' => MIXED,                      # clsx('base', { active: true }, ...)
-    'complex' => COMPLEX                   # clsx(nested, structures, ...)
+    'single string' => [SINGLE_STRING],          # clsx('btn btn-primary')
+    'string array' => [STRINGS],                 # clsx(%w[...])
+    'multiple strings' => STRINGS,               # clsx('btn', 'btn-primary', ...)
+    'hash' => [HASH],                             # clsx({ foo: true, ... })
+    'string + hash' => STRING_HASH,               # clsx('btn btn-primary', { active: true, ... })
+    'string + hash (overlap)' => STRING_HASH_OVERLAP, # clsx('btn btn-primary', { active: true, btn: true })
+    'mixed' => MIXED,                             # clsx('base', { active: true }, ...)
+    'complex' => COMPLEX                          # clsx(nested, structures, ...)
   }.freeze
 end

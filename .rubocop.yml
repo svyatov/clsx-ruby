@@ -43,6 +43,15 @@ Metrics/PerceivedComplexity:
   Exclude:
     - 'lib/clsx/helper.rb'
 
+Metrics/ModuleLength:
+  Exclude:
+    - 'lib/clsx/helper.rb'
+
+Metrics/BlockLength:
+  Exclude:
+    - 'lib/clsx/helper.rb'
+    - 'test/**/*_test.rb'
+
 Metrics/BlockNesting:
   Exclude:
     - 'lib/clsx/helper.rb'

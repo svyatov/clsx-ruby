@@ -216,6 +216,176 @@ module Clsx
       assert_equal expected, clsx(falsy_values, truthy_values)
     end
 
+    def test_single_string_dedup
+      assert_equal 'btn btn-active', clsx('btn btn-active btn')
+      assert_equal 'a b c', clsx('a b c b a')
+      assert_equal 'foo', clsx('foo foo foo')
+      # No duplicates — returns original
+      assert_equal 'btn btn-primary', clsx('btn btn-primary')
+    end
+
+    def test_single_symbol_dedup
+      assert_equal 'btn btn-active', clsx(:'btn btn-active btn')
+      assert_equal 'a b c', clsx(:'a b c b a')
+    end
+
+    def test_hash_symbol_key_with_spaces
+      assert_equal 'btn active', clsx('btn btn': true, active: true)
+      assert_equal 'a b', clsx('a b': true)
+    end
+
+    def test_str_hash_symbol_key_with_spaces
+      assert_equal 'base btn', clsx('base', 'btn btn': true)
+      assert_equal 'btn btn-primary active btn-lg', clsx('btn btn-primary', 'active btn-lg': true)
+    end
+
+    def test_cross_argument_dedup_with_multi_token_strings
+      assert_equal 'foo bar', clsx('foo bar', 'foo')
+      assert_equal 'foo bar', clsx('foo bar', 'bar')
+      assert_equal 'foo bar baz', clsx('foo bar', 'baz', 'foo')
+      assert_equal 'a b c d', clsx('a b c', 'b c d')
+    end
+
+    def test_string_hash_dedup_with_multi_token_base
+      assert_equal 'btn btn-primary active', clsx('btn btn btn-primary', active: true)
+      assert_equal 'btn btn-primary', clsx('btn btn-primary', btn: true)
+      assert_equal 'btn btn-primary active', clsx('btn btn-primary', active: true, btn: true)
+      assert_equal 'btn btn-primary', clsx('btn btn-primary', 'btn' => true)
+      assert_equal 'btn-primary btn', clsx('btn-primary', btn: true) # partial match — no dedup
+    end
+
+    def test_simple_hash_with_space_in_string_key
+      assert_equal 'foo bar', clsx('foo bar' => true, 'foo' => true)
+      assert_equal 'a b', clsx('a b' => true)
+    end
+
+    def test_single_array_with_multi_token_strings
+      assert_equal 'foo bar', clsx(['foo bar', 'foo'])
+      assert_equal 'a b c d', clsx(['a b c', 'b c d'])
+    end
+
+    # --- Cross-type deduplication ---
+
+    def test_string_and_symbol_key_dedup_in_hash
+      assert_equal 'a', clsx('a' => true, a: true)
+      assert_equal 'a b', clsx('a' => true, a: true, b: true)
+    end
+
+    def test_string_and_symbol_arg_dedup
+      assert_equal 'foo', clsx('foo', :foo)
+      assert_equal 'foo', clsx(:foo, 'foo')
+      assert_equal 'foo bar', clsx(:foo, 'bar', 'foo', :bar)
+    end
+
+    def test_string_arg_and_hash_key_dedup
+      assert_equal 'foo', clsx('foo', foo: true)
+      assert_equal 'foo', clsx('foo', 'foo' => true)
+      assert_equal 'foo', clsx(:foo, 'foo' => true)
+    end
+
+    def test_array_and_hash_dedup
+      assert_equal 'foo', clsx(['foo'], foo: true)
+      assert_equal 'foo bar', clsx(%w[foo bar], foo: true, bar: true)
+    end
+
+    def test_nested_array_dedup_against_top_level
+      assert_equal 'foo', clsx('foo', [['foo']])
+      assert_equal 'foo bar', clsx('foo', [['bar', ['foo']]])
+    end
+
+    def test_symbol_and_string_in_array_dedup
+      assert_equal 'foo', clsx([:foo, 'foo'])
+      assert_equal 'foo bar', clsx([:foo, 'bar', 'foo', :bar])
+    end
+
+    def test_numeric_and_string_dedup
+      assert_equal '1', clsx(1, '1')
+      assert_equal '0 1', clsx(0, '1', 1, '0')
+    end
+
+    # --- Multi-token key self-dedup ---
+
+    def test_multi_token_string_key_self_dedup
+      assert_equal 'hello', clsx('hello hello' => true)
+      assert_equal 'a b', clsx('a b a b a' => true)
+    end
+
+    def test_multi_token_symbol_key_self_dedup
+      assert_equal 'hello', clsx('hello hello': true)
+      assert_equal 'a b', clsx('a b a b a': true)
+    end
+
+    def test_multi_token_key_dedup_across_keys
+      assert_equal 'a b c', clsx('a b' => true, 'b c' => true)
+      assert_equal 'a b c', clsx('a b': true, 'b c': true)
+    end
+
+    # --- Mixed-type multi-token dedup ---
+
+    def test_multi_token_dedup_across_arg_types
+      assert_equal 'a b c d', clsx('a b', ['b c'], { c: true, d: true })
+      assert_equal 'foo bar baz', clsx('foo bar', :baz, ['foo'], bar: true)
+    end
+
+    # --- Whitespace handling ---
+
+    def test_whitespace_only_strings
+      assert_nil clsx('   ')
+      assert_nil clsx(' ')
+      assert_nil clsx("\t")
+      assert_nil clsx("\n")
+      assert_nil clsx("\t\n  ")
+    end
+
+    def test_whitespace_only_strings_in_arrays
+      assert_nil clsx(['   '])
+      assert_nil clsx([' ', '  '])
+      assert_equal 'foo', clsx(['   ', 'foo'])
+    end
+
+    def test_whitespace_only_hash_keys
+      assert_nil clsx(' ' => true)
+      assert_nil clsx('   ' => true)
+      assert_nil clsx(' ': true)
+      assert_equal 'foo', clsx(' ' => true, 'foo' => true)
+    end
+
+    def test_leading_trailing_whitespace_normalization
+      assert_equal 'foo', clsx(' foo ')
+      assert_equal 'foo bar', clsx(' foo bar ')
+      assert_equal 'foo bar', clsx('foo ', ' bar')
+    end
+
+    def test_consecutive_space_normalization
+      assert_equal 'foo bar', clsx('foo  bar')
+      assert_equal 'foo bar baz', clsx('foo  bar  baz')
+    end
+
+    def test_tab_and_newline_as_whitespace
+      assert_equal 'foo bar', clsx("foo\tbar")
+      assert_equal 'foo bar', clsx("foo\nbar")
+      assert_equal 'foo bar', clsx("foo\t\nbar")
+    end
+
+    def test_tab_in_hash_key_with_multi_token_base
+      # str+hash full path: tab-containing keys must be normalized
+      assert_equal 'foo bar a b', clsx('foo bar', "a\tb": true)
+      assert_equal 'foo bar', clsx('foo bar', "foo\tbar": true)
+      assert_equal 'foo bar a b', clsx('foo bar', "a\nb": true)
+      assert_equal 'foo bar a b', clsx('foo bar', "a\tb" => true)
+    end
+
+    def test_tab_in_base_string_with_hash
+      # tab-containing base string should be normalized
+      assert_equal 'a b foo', clsx("a\tb", foo: true)
+      assert_equal 'a b', clsx("a\tb", a: true)
+    end
+
+    def test_whitespace_only_symbol
+      assert_nil clsx(:'  ')
+      assert_nil clsx(:"\t")
+    end
+
     # --- Module-level API tests ---
 
     def test_clsx_bracket_api
