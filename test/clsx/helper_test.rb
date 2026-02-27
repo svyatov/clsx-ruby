@@ -211,7 +211,7 @@ module Clsx
         class: Class.new
       }
 
-      expected = truthy_values.keys.map(&:to_s).join(' ')
+      expected = truthy_values.keys.join(' ')
 
       assert_equal expected, clsx(falsy_values, truthy_values)
     end
