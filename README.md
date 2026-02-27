@@ -38,12 +38,12 @@ For Rails integration (adds `clsx` and `cn` helpers to all views), see [clsx-rai
 
 | Scenario | clsx-ruby | Rails `class_names` | Speedup |
 |---|---|---|---|
-| String array | 1.3M i/s | 368K i/s | **3.5x** |
-| Multiple strings | 1.3M i/s | 418K i/s | **3.2x** |
-| Mixed types | 919K i/s | 366K i/s | **2.5x** |
-| Single string | 2.1M i/s | 897K i/s | **2.4x** |
-| Hash | 1.6M i/s | 685K i/s | **2.3x** |
-| String + hash | 1.0M i/s | 583K i/s | **1.7x** |
+| String array | 1.3M i/s | 369K i/s | **3.4x** |
+| Multiple strings | 1.3M i/s | 408K i/s | **3.3x** |
+| Single string | 2.4M i/s | 893K i/s | **2.7x** |
+| Mixed types | 912K i/s | 358K i/s | **2.5x** |
+| Hash | 1.7M i/s | 672K i/s | **2.5x** |
+| String + hash | 1.2M i/s | 565K i/s | **2.1x** |
 
 <sup>Ruby 4.0.1, Apple M1 Pro. Reproduce: `bundle exec ruby benchmark/run.rb`</sup>
 
@@ -53,7 +53,7 @@ For Rails integration (adds `clsx` and `cn` helpers to all views), see [clsx-rai
 |---|---|---|
 | Conditional classes | ✅ | ✅ |
 | Auto-deduplication | ✅ | ✅ |
-| 2–4× faster | ✅ | ❌ |
+| 2–3× faster | ✅ | ❌ |
 | Returns `nil` when empty | ✅ | ❌ (returns `""`) |
 | Complex hash keys | ✅ | ❌ |
 | Framework-agnostic | ✅ | ❌ |
