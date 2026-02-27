@@ -26,12 +26,18 @@ module Clsx
     #   clsx(%w[foo bar], hidden: true)         # => "foo bar hidden"
     def clsx(*args)
       return nil if args.empty?
-      return clsx_single(args[0]) if args.size == 1
-      return clsx_string_hash(args[0], args[1]) if args.size == 2 && args[0].is_a?(String) && args[1].is_a?(Hash)
+      return clsx_one(args[0]) if args.size == 1
+
+      if args.size == 2 && args[0].is_a?(String) && args[1].is_a?(Hash)
+        str = args[0]
+        return clsx_hash(args[1]) if str.empty?
+        return clsx_str_hash_full(str, args[1]) if str.include?(' ') || str.include?("\t") || str.include?("\n") # rubocop:disable Layout/EmptyLineAfterGuardClause
+        return clsx_str_hash(str, args[1])
+      end
 
       seen = {}
-      clsx_process(args, seen)
-      seen.empty? ? nil : seen.keys.join(' ')
+      clsx_walk(args, seen)
+      clsx_join(seen)
     end
 
     # (see #clsx)
@@ -39,131 +45,283 @@ module Clsx
 
     private
 
-    # Single-argument fast path — dispatches by type to avoid allocating
-    # a +seen+ hash when possible.
+    # Single-argument fast path — dispatches by type, handles multi-token
+    # string dedup without allocating a walker Hash for simple cases.
     #
-    # @param arg [String, Symbol, Hash, Array] single class descriptor
-    # @return [String] resolved class string
-    # @return [nil] when the argument produces no classes
-    def clsx_single(arg)
-      return (arg.empty? ? nil : arg) if arg.is_a?(String)
-      return arg.name if arg.is_a?(Symbol)
-      return clsx_simple_hash(arg) if arg.is_a?(Hash)
+    # @param arg [Object] single class descriptor
+    # @return [String, nil]
+    def clsx_one(arg)
+      if arg.is_a?(String)
+        return nil if arg.empty?
+        return arg unless arg.include?(' ') || arg.include?("\t") || arg.include?("\n")
+
+        parts = arg.split
+        return nil if parts.empty?
+        return parts[0] if parts.length == 1
+        return arg if !parts.uniq! && parts.length == arg.count(' ') + 1 # rubocop:disable Layout/EmptyLineAfterGuardClause
+        return parts.join(' ')
+      end
+
+      if arg.is_a?(Symbol)
+        s = arg.name
+        return s unless s.include?(' ') || s.include?("\t") || s.include?("\n") # rubocop:disable Layout/EmptyLineAfterGuardClause
+        return clsx_dedup_str(s)
+      end
+
+      return clsx_hash(arg) if arg.is_a?(Hash)
 
       if arg.is_a?(Array)
         return nil if arg.empty?
 
-        if arg.all?(String)
-          seen = {}
-          arg.each { |s| seen[s] = true unless s.empty? }
-          return seen.empty? ? nil : seen.keys.join(' ')
-        end
-
         seen = {}
-        clsx_process(arg, seen)
-        return seen.empty? ? nil : seen.keys.join(' ')
+        clsx_walk(arg, seen)
+        return clsx_join(seen)
       end
 
-      return arg.to_s if arg.is_a?(Numeric)
       return nil if !arg || arg == true || arg.is_a?(Proc)
 
-      str = arg.to_s
-      str.empty? ? nil : str
+      s = arg.to_s
+      s.empty? ? nil : s
     end
 
-    # Hash-only fast path — no dedup needed since hash keys are unique.
-    # Falls back to {#clsx_process} on non-String/Symbol keys.
+    # Dedup and normalize a multi-token string. Handles whitespace-only
+    # input, leading/trailing whitespace, tabs, newlines, and duplicates.
     #
-    # @param hash [Hash{String, Symbol => Boolean}] class-name => condition pairs
-    # @return [String] resolved class string
-    # @return [nil] when no hash values are truthy
-    def clsx_simple_hash(hash)
+    # @param str [String] space-separated class string
+    # @return [String, nil]
+    def clsx_dedup_str(str)
+      parts = str.split
+      return nil if parts.empty?
+      return parts[0] if parts.length == 1
+      return str if !parts.uniq! && parts.length == str.count(' ') + 1
+
+      parts.join(' ')
+    end
+
+    # Hash-only fast path using string buffer. Falls back to Hash dedup
+    # on mixed key types, multi-token keys, or complex keys.
+    #
+    # @param hash [Hash] class-name => condition pairs
+    # @return [String, nil]
+    def clsx_hash(hash)
       return nil if hash.empty?
 
       buf = nil
+      key_type = nil
+
       hash.each do |key, value|
         next unless value
 
         if key.is_a?(Symbol)
-          str = key.name
-          buf ? (buf << ' ' << str) : (buf = str.dup)
+          return clsx_hash_full(hash) if key_type == :string
+
+          key_type = :symbol
+          s = key.name
+          return clsx_hash_full(hash) if s.include?(' ')
+
+          buf ? (buf << ' ' << s) : (buf = s.dup)
         elsif key.is_a?(String)
           next if key.empty?
 
+          return clsx_hash_full(hash) if key_type == :symbol
+          return clsx_hash_full(hash) if key.include?(' ')
+
+          key_type = :string
           buf ? (buf << ' ' << key) : (buf = key.dup)
         else
-          seen = {}
-          clsx_process([hash], seen)
-          return seen.empty? ? nil : seen.keys.join(' ')
+          return clsx_hash_full(hash)
         end
       end
+
+      return nil unless buf
+      return clsx_dedup_str(buf) if buf.include?("\t") || buf.include?("\n")
+
       buf
     end
 
-    # Fast path for +clsx('base', active: cond)+ — deduplicates only against
-    # the base string. Falls back to {#clsx_process} on non-String/Symbol keys.
+    # Hash fallback with full dedup via walker.
+    #
+    # @param hash [Hash] class-name => condition pairs
+    # @return [String, nil]
+    def clsx_hash_full(hash)
+      seen = {}
+      clsx_walk_hash(hash, seen)
+      clsx_join(seen)
+    end
+
+    # Fast path for +clsx('base', active: cond)+ pattern where base is a
+    # single token. Deduplicates via direct string comparison.
     #
     # @param str [String] base class name
-    # @param hash [Hash{String, Symbol => Boolean}] class-name => condition pairs
-    # @return [String] resolved class string
-    # @return [nil] when no classes apply
-    def clsx_string_hash(str, hash)
-      return clsx_simple_hash(hash) if str.empty?
-
+    # @param hash [Hash] class-name => condition pairs
+    # @return [String, nil]
+    def clsx_str_hash(str, hash)
       buf = str.dup
+      key_type = nil
+
       hash.each do |key, value|
         next unless value
 
         if key.is_a?(Symbol)
+          return clsx_str_hash_full(str, hash) if key_type == :string
+
+          key_type = :symbol
           s = key.name
-          buf << ' ' << s unless s == str
+          return clsx_str_hash_full(str, hash) if s.include?(' ')
+
+          next if s == str
+
+          buf << ' ' << s
         elsif key.is_a?(String)
-          buf << ' ' << key unless key.empty? || key == str
+          return clsx_str_hash_full(str, hash) if key_type == :symbol
+
+          key_type = :string
+          next if key.empty?
+
+          return clsx_str_hash_full(str, hash) if key.include?(' ')
+
+          next if key == str
+
+          buf << ' ' << key
         else
-          seen = { str => true }
-          clsx_process([hash], seen)
-          return seen.size == 1 ? str : seen.keys.join(' ')
+          return clsx_str_hash_full(str, hash)
         end
       end
+
+      return clsx_dedup_str(buf) if buf.include?("\t") || buf.include?("\n")
+
       buf
     end
 
-    # General-purpose recursive walker. Processes hash keys inline for simple
-    # types (String/Symbol) to avoid deferred-array allocation. Only complex
-    # keys (Array, nested Hash) recurse.
+    # Full str+hash dedup using array lookup. Splits the base string once,
+    # then checks hash keys against the parts array via linear search.
+    # Falls back to Hash dedup on mixed key types or complex keys.
     #
-    # @param args [Array<String, Symbol, Hash, Array, Numeric, nil, false>] nested arguments
+    # @param str [String] base class name (contains spaces)
+    # @param hash [Hash] class-name => condition pairs
+    # @return [String, nil]
+    def clsx_str_hash_full(str, hash)
+      parts = str.split
+      return clsx_hash(hash) if parts.empty?
+      return clsx_str_hash_full_walk(parts, hash) if parts.length == 1
+
+      buf = if parts.uniq! || parts.length != str.count(' ') + 1
+              parts.join(' ')
+            else
+              str.dup
+            end
+
+      key_type = nil
+
+      hash.each do |key, value|
+        next unless value
+
+        if key.is_a?(Symbol)
+          return clsx_str_hash_full_walk(parts, hash) if key_type == :string
+
+          key_type = :symbol
+          s = key.name
+          return clsx_str_hash_full_walk(parts, hash) if s.include?(' ') || s.include?("\t") || s.include?("\n")
+
+          next if parts.include?(s)
+
+          buf << ' ' << s
+        elsif key.is_a?(String)
+          return clsx_str_hash_full_walk(parts, hash) if key_type == :symbol
+
+          key_type = :string
+          next if key.empty?
+          return clsx_str_hash_full_walk(parts, hash) if key.include?(' ') || key.include?("\t") || key.include?("\n")
+
+          next if parts.include?(key)
+
+          buf << ' ' << key
+        else
+          return clsx_str_hash_full_walk(parts, hash)
+        end
+      end
+
+      buf
+    end
+
+    # Hash-based fallback for str+hash when array lookup can't handle it.
+    #
+    # @param parts [Array<String>] pre-split base tokens
+    # @param hash [Hash] class-name => condition pairs
+    # @return [String, nil]
+    def clsx_str_hash_full_walk(parts, hash)
+      seen = {}
+      parts.each { |s| seen[s] = true }
+      clsx_walk_hash(hash, seen)
+      clsx_join(seen)
+    end
+
+    # General-purpose recursive walker. Stores strings as-is; normalization
+    # and dedup are handled by {#clsx_join} after walking.
+    #
+    # @param args [Array] nested arguments to walk
     # @param seen [Hash{String => true}] accumulator for deduplication
     # @return [void]
-    def clsx_process(args, seen)
+    def clsx_walk(args, seen)
       args.each do |arg|
         if arg.is_a?(String)
           seen[arg] = true unless arg.empty?
         elsif arg.is_a?(Symbol)
           seen[arg.name] = true
         elsif arg.is_a?(Array)
-          clsx_process(arg, seen)
+          clsx_walk(arg, seen)
         elsif arg.is_a?(Hash)
-          arg.each do |key, value|
-            next unless value
-
-            if key.is_a?(Symbol)
-              seen[key.name] = true
-            elsif key.is_a?(String)
-              seen[key] = true unless key.empty?
-            else
-              clsx_process([key], seen)
-            end
-          end
-        elsif arg.is_a?(Numeric)
-          seen[arg.to_s] = true
+          clsx_walk_hash(arg, seen)
         elsif !arg || arg == true || arg.is_a?(Proc)
           next
         else
-          str = arg.to_s
-          seen[str] = true unless str.empty?
+          s = arg.to_s
+          seen[s] = true unless s.empty?
         end
       end
+    end
+
+    # Hash-specific walker — avoids wrapping hash in an array for recursion.
+    #
+    # @param hash [Hash] hash to walk
+    # @param seen [Hash{String => true}] accumulator
+    # @return [void]
+    def clsx_walk_hash(hash, seen)
+      return if hash.empty?
+
+      hash.each do |key, value|
+        next unless value
+
+        if key.is_a?(Symbol)
+          seen[key.name] = true
+        elsif key.is_a?(String)
+          seen[key] = true unless key.empty?
+        elsif key.is_a?(Array)
+          clsx_walk(key, seen)
+        elsif key.is_a?(Hash)
+          clsx_walk_hash(key, seen)
+        elsif !key || key == true || key.is_a?(Proc)
+          next
+        else
+          s = key.to_s
+          seen[s] = true unless s.empty?
+        end
+      end
+    end
+
+    # Post-join dedup and normalization: detects multi-token entries via
+    # space count mismatch or tab/newline presence, then splits and rebuilds.
+    #
+    # @param seen [Hash{String => true}] token accumulator
+    # @return [String, nil] space-joined class string
+    def clsx_join(seen)
+      return nil if seen.empty?
+
+      result = seen.keys.join(' ')
+      return result if result.count(' ') + 1 == seen.size && !result.include?("\t") && !result.include?("\n")
+
+      normalized = result.split.uniq.join(' ')
+      normalized.empty? ? nil : normalized
     end
   end
 end

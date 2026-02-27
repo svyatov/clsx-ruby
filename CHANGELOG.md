@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Whitespace normalization: tabs, newlines, leading/trailing spaces, and consecutive spaces are normalized to single spaces (e.g., `clsx("foo\tbar")` returns `"foo bar"`)
+- Whitespace-only strings return `nil` (e.g., `clsx("   ")` returns `nil`)
+
+### Fixed
+
+- Deduplicate class names across multi-token strings (e.g., `clsx("foo bar", "foo")` now returns `"foo bar"`)
+
 ## v1.1.2
 
 ### Changed

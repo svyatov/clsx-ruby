@@ -56,7 +56,8 @@ The helper uses an optimized algorithm with fast-paths for common cases (single 
 ## Key Behaviors
 
 - Returns `nil` (not empty string) when no classes apply — prevents rendering empty `class=""` attributes
-- Eliminates duplicate classes automatically
+- Eliminates duplicate classes automatically, even across multi-token strings
+- Normalizes whitespace: tabs, newlines, leading/trailing and consecutive spaces become single spaces
 - Ruby falsy values are only `false` and `nil` (unlike JS, `0`, `''`, `[]`, `{}` are truthy)
 - Ignores `Proc`/lambda objects and boolean `true` values
 - Supports complex hash keys like `{ %w[foo bar] => true }` which resolve recursively

@@ -1,30 +1,28 @@
 # frozen_string_literal: true
 
-# Quick benchmark for fast iteration during development
+# Quick benchmark for iteration — no Rails, shorter runs
 # Usage: bundle exec ruby benchmark/quick.rb
-# For full comparison with original: bundle exec ruby benchmark/run.rb
 
 require 'bundler/setup'
+require 'benchmark/ips'
 require 'clsx'
 
 require_relative 'data'
+require_relative 'original'
 
 BD = BenchmarkData
-Helper = Object.new.extend(Clsx::Helper)
-
-def bench(name, iterations = 50_000)
-  100.times { yield } # Warmup
-
-  t = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-  iterations.times { yield }
-  elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - t
-
-  puts format('%-20s %10d ops/sec', name, (iterations / elapsed).round(0))
-end
+Optimized = Object.new.extend(Clsx::Helper)
+Original = Object.new.extend(ClsxOriginal)
 
 puts "clsx-ruby Quick Benchmark (Ruby #{RUBY_VERSION})"
-puts '=' * 45
+puts '=' * 60
 
 BD::BENCHMARKS.each do |name, args|
-  bench(name) { Helper.clsx(*args) }
+  Benchmark.ips do |x|
+    x.warmup = 0.5
+    x.time = 1
+    x.report("#{name} (orig)") { Original.clsx(*args) }
+    x.report("#{name} (new)") { Optimized.clsx(*args) }
+    x.compare!
+  end
 end

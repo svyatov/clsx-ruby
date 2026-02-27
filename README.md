@@ -34,16 +34,16 @@ For Rails integration (adds `clsx` and `cn` helpers to all views), see [clsx-rai
 
 ### Blazing fast
 
-**3-8x faster** than Rails `class_names` across every scenario:
+**2-3x faster** than Rails `class_names` across every scenario:
 
 | Scenario | clsx-ruby | Rails `class_names` | Speedup |
 |---|---|---|---|
-| Single string | 7.6M i/s | 911K i/s | **8.5x** |
-| String + hash | 2.4M i/s | 580K i/s | **4.1x** |
-| String array | 1.4M i/s | 357K i/s | **4.0x** |
-| Multiple strings | 1.5M i/s | 414K i/s | **3.7x** |
-| Hash | 2.2M i/s | 670K i/s | **3.3x** |
-| Mixed types | 852K i/s | 367K i/s | **2.3x** |
+| String array | 1.3M i/s | 369K i/s | **3.4x** |
+| Multiple strings | 1.3M i/s | 408K i/s | **3.3x** |
+| Single string | 2.4M i/s | 893K i/s | **2.7x** |
+| Mixed types | 912K i/s | 358K i/s | **2.5x** |
+| Hash | 1.7M i/s | 672K i/s | **2.5x** |
+| String + hash | 1.2M i/s | 565K i/s | **2.1x** |
 
 <sup>Ruby 4.0.1, Apple M1 Pro. Reproduce: `bundle exec ruby benchmark/run.rb`</sup>
 
@@ -53,7 +53,7 @@ For Rails integration (adds `clsx` and `cn` helpers to all views), see [clsx-rai
 |---|---|---|
 | Conditional classes | ✅ | ✅ |
 | Auto-deduplication | ✅ | ✅ |
-| 3–8× faster | ✅ | ❌ |
+| 2–3× faster | ✅ | ❌ |
 | Returns `nil` when empty | ✅ | ❌ (returns `""`) |
 | Complex hash keys | ✅ | ❌ |
 | Framework-agnostic | ✅ | ❌ |
@@ -228,9 +228,10 @@ end
    Clsx[nil, false] # => nil
    ```
 
-2. **Deduplication** — Duplicate classes are automatically removed:
+2. **Deduplication** — Duplicate classes are automatically removed, even across multi-token strings:
    ```ruby
-   Clsx['foo', 'foo'] # => 'foo'
+   Clsx['foo', 'foo']      # => 'foo'
+   Clsx['foo bar', 'foo']  # => 'foo bar'
    ```
 
 3. **Falsy values** — In Ruby only `false` and `nil` are falsy, so `0`, `''`, `[]`, `{}` are all truthy:

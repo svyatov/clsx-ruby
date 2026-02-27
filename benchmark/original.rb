@@ -1,9 +1,6 @@
 # frozen_string_literal: true
 
-# Previous implementation for benchmarking comparison.
-# Keep in sync: before any algorithm change, copy the current
-# lib/clsx/helper.rb methods here so benchmarks compare against
-# the last committed version, not an ancient baseline.
+# v1.1.2 release implementation (no multi-token dedup)
 module ClsxOriginal
   def clsx(*args)
     return nil if args.empty?
@@ -55,7 +52,6 @@ module ClsxOriginal
         buf ? (buf << ' ' << str) : (buf = str.dup)
       elsif key.is_a?(String)
         next if key.empty?
-
         buf ? (buf << ' ' << key) : (buf = key.dup)
       else
         seen = {}
@@ -88,8 +84,6 @@ module ClsxOriginal
   end
 
   def clsx_process(args, seen)
-    deferred = nil
-
     args.each do |arg|
       if arg.is_a?(String)
         seen[arg] = true unless arg.empty?
@@ -98,7 +92,17 @@ module ClsxOriginal
       elsif arg.is_a?(Array)
         clsx_process(arg, seen)
       elsif arg.is_a?(Hash)
-        arg.each { |key, value| (deferred ||= []) << key if value }
+        arg.each do |key, value|
+          next unless value
+
+          if key.is_a?(Symbol)
+            seen[key.name] = true
+          elsif key.is_a?(String)
+            seen[key] = true unless key.empty?
+          else
+            clsx_process([key], seen)
+          end
+        end
       elsif arg.is_a?(Numeric)
         seen[arg.to_s] = true
       elsif !arg || arg == true || arg.is_a?(Proc)
@@ -108,7 +112,5 @@ module ClsxOriginal
         seen[str] = true unless str.empty?
       end
     end
-
-    clsx_process(deferred, seen) if deferred
   end
 end
