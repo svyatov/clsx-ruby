@@ -174,7 +174,13 @@ module Clsx
     end
 
     # Fast path for +clsx('base', active: cond)+ pattern where base is a
-    # single token. Deduplicates via direct string comparison.
+    # single token. Deduplicates via direct string comparison against +str+.
+    #
+    # A key containing a space forces the {#clsx_str_hash_full} fallback —
+    # whole-key comparison can't dedup tokens *inside* a multi-token key, and
+    # the trailing normalization only rescans for tab/newline. Tab/newline keys
+    # are kept and normalized by that trailing {#clsx_dedup_str} pass, which
+    # splits on all whitespace.
     #
     # @param str [String] base class name
     # @param hash [Hash] class-name => condition pairs
