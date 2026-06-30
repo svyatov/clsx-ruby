@@ -24,9 +24,6 @@ bundle exec ruby -Itest test/clsx/helper_test.rb -n test_with_strings
 # Run linter
 bundle exec rake rubocop
 
-# Run benchmark
-bundle exec ruby benchmark/run.rb
-
 # Install dependencies
 bin/setup
 
@@ -61,12 +58,6 @@ The helper uses an optimized algorithm with fast-paths for common cases (single 
 - Ruby falsy values are only `false` and `nil` (unlike JS, `0`, `''`, `[]`, `{}` are truthy)
 - Ignores `Proc`/lambda objects and boolean `true` values
 - Supports complex hash keys like `{ %w[foo bar] => true }` which resolve recursively
-
-## Benchmarking
-
-`benchmark/original.rb` contains the **previous version** of the algorithm for comparison. It must always reflect the last committed version from the main branch — not some ancient baseline.
-
-**Rule:** Before making any algorithm or performance change to `lib/clsx/helper.rb`, copy the current main-branch implementation into `benchmark/original.rb` (wrapping in `module ClsxOriginal` — method names stay the same, no renaming needed). This ensures `bundle exec ruby benchmark/run.rb` compares the new code against its immediate predecessor, giving meaningful before/after numbers.
 
 ## Commit Convention
 
