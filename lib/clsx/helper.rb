@@ -98,6 +98,9 @@ module Clsx
       parts = str.split
       return nil if parts.empty?
       return parts[0] if parts.length == 1
+      # Already canonical (single-spaced, no dup/leading/trailing/tab/newline)
+      # iff uniq! removed nothing and token count == space count + 1; then
+      # return str as-is and skip the join allocation.
       return str if !parts.uniq! && parts.length == str.count(' ') + 1
 
       parts.join(' ')
