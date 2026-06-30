@@ -26,12 +26,29 @@ module Clsx
     #   clsx(%w[foo bar], hidden: true)         # => "foo bar hidden"
     def clsx(*args)
       return nil if args.empty?
-      return clsx_one(args[0]) if args.size == 1
+
+      if args.size == 1
+        arg = args[0]
+        # Inline the two dominant single-arg shapes (String, Hash) so they skip
+        # the clsx_one dispatch. Other types fall through to clsx_one, which no
+        # longer re-checks String or Hash (already ruled out here).
+        if arg.is_a?(String)
+          return nil if arg.empty?
+          return arg unless arg.include?(' ') || arg.include?("\t") || arg.include?("\n")
+
+          return clsx_dedup_str(arg)
+        end
+
+        return clsx_hash(arg) if arg.is_a?(Hash)
+
+        return clsx_one(arg)
+      end
 
       if args.size == 2 && args[0].is_a?(String) && args[1].is_a?(Hash)
         str = args[0]
         return clsx_hash(args[1]) if str.empty?
-        return clsx_str_hash_full(str, args[1]) if str.include?(' ') || str.include?("\t") || str.include?("\n") # rubocop:disable Layout/EmptyLineAfterGuardClause
+        return clsx_str_hash_full(str, args[1]) if str.include?(' ') || str.include?("\t") || str.include?("\n")
+
         return clsx_str_hash(str, args[1])
       end
 
@@ -45,30 +62,18 @@ module Clsx
 
     private
 
-    # Single-argument fast path — dispatches by type, handles multi-token
-    # string dedup without allocating a walker Hash for simple cases.
+    # Single-argument fast path for descriptors other than String and Hash,
+    # both of which are handled inline in {#clsx} — this method never sees them.
     #
-    # @param arg [Object] single class descriptor
+    # @param arg [Object] single non-String, non-Hash class descriptor
     # @return [String, nil]
     def clsx_one(arg)
-      if arg.is_a?(String)
-        return nil if arg.empty?
-        return arg unless arg.include?(' ') || arg.include?("\t") || arg.include?("\n")
-
-        parts = arg.split
-        return nil if parts.empty?
-        return parts[0] if parts.length == 1
-        return arg if !parts.uniq! && parts.length == arg.count(' ') + 1 # rubocop:disable Layout/EmptyLineAfterGuardClause
-        return parts.join(' ')
-      end
-
       if arg.is_a?(Symbol)
         s = arg.name
-        return s unless s.include?(' ') || s.include?("\t") || s.include?("\n") # rubocop:disable Layout/EmptyLineAfterGuardClause
+        return s unless s.include?(' ') || s.include?("\t") || s.include?("\n")
+
         return clsx_dedup_str(s)
       end
-
-      return clsx_hash(arg) if arg.is_a?(Hash)
 
       if arg.is_a?(Array)
         return nil if arg.empty?
@@ -93,13 +98,20 @@ module Clsx
       parts = str.split
       return nil if parts.empty?
       return parts[0] if parts.length == 1
+      # Already canonical (single-spaced, no dup/leading/trailing/tab/newline)
+      # iff uniq! removed nothing and token count == space count + 1; then
+      # return str as-is and skip the join allocation.
       return str if !parts.uniq! && parts.length == str.count(' ') + 1
 
       parts.join(' ')
     end
 
-    # Hash-only fast path using string buffer. Falls back to Hash dedup
-    # on mixed key types, multi-token keys, or complex keys.
+    # Hash-only fast path using a string buffer, skipping cross-key dedup.
+    # Hash keys are unique, so the only way two distinct keys collide on a
+    # class name is a Symbol and a String of the same name (+:foo+ and
+    # +"foo"+ both yield "foo"). Hence on mixed key types — plus multi-token
+    # or complex (Array/Hash) keys — it falls back to {#clsx_hash_full}, which
+    # deduplicates.
     #
     # @param hash [Hash] class-name => condition pairs
     # @return [String, nil]
@@ -107,6 +119,7 @@ module Clsx
       return nil if hash.empty?
 
       buf = nil
+      owned = false
       key_type = nil
 
       hash.each do |key, value|
@@ -119,7 +132,15 @@ module Clsx
           s = key.name
           return clsx_hash_full(hash) if s.include?(' ')
 
-          buf ? (buf << ' ' << s) : (buf = s.dup)
+          # Defer the dup: hold the first token by reference (frozen name or the
+          # caller's key) and only copy when a second token must be appended.
+          if buf
+            buf = buf.dup unless owned
+            owned = true
+            buf << ' ' << s
+          else
+            buf = s
+          end
         elsif key.is_a?(String)
           next if key.empty?
 
@@ -127,7 +148,13 @@ module Clsx
           return clsx_hash_full(hash) if key.include?(' ')
 
           key_type = :string
-          buf ? (buf << ' ' << key) : (buf = key.dup)
+          if buf
+            buf = buf.dup unless owned
+            owned = true
+            buf << ' ' << key
+          else
+            buf = key
+          end
         else
           return clsx_hash_full(hash)
         end
@@ -150,7 +177,13 @@ module Clsx
     end
 
     # Fast path for +clsx('base', active: cond)+ pattern where base is a
-    # single token. Deduplicates via direct string comparison.
+    # single token. Deduplicates via direct string comparison against +str+.
+    #
+    # A key containing a space forces the {#clsx_str_hash_full} fallback —
+    # whole-key comparison can't dedup tokens *inside* a multi-token key, and
+    # the trailing normalization only rescans for tab/newline. Tab/newline keys
+    # are kept and normalized by that trailing {#clsx_dedup_str} pass, which
+    # splits on all whitespace.
     #
     # @param str [String] base class name
     # @param hash [Hash] class-name => condition pairs

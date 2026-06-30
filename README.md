@@ -34,18 +34,19 @@ For Rails integration (adds `clsx` and `cn` helpers to all views), see [clsx-rai
 
 ### Blazing fast
 
-**2-3x faster** than Rails `class_names` across every scenario:
+**2–4x faster** than Rails `class_names` — never slower, on realistic markup:
 
 | Scenario | clsx-ruby | Rails `class_names` | Speedup |
 |---|---|---|---|
-| String array | 1.3M i/s | 369K i/s | **3.4x** |
-| Multiple strings | 1.3M i/s | 408K i/s | **3.3x** |
-| Single string | 2.4M i/s | 893K i/s | **2.7x** |
-| Mixed types | 912K i/s | 358K i/s | **2.5x** |
-| Hash | 1.7M i/s | 672K i/s | **2.5x** |
-| String + hash | 1.2M i/s | 565K i/s | **2.1x** |
+| Token | 4.7M i/s | 1.1M i/s | **4.2x** |
+| String array | 1.3M i/s | 452K i/s | **3.0x** |
+| String + hash | 1.8M i/s | 610K i/s | **2.9x** |
+| Utility string | 1.0M i/s | 371K i/s | **2.7x** |
+| Long utility | 561K i/s | 209K i/s | **2.7x** |
+| Utility + hash | 1.1M i/s | 457K i/s | **2.3x** |
+| Hash | 1.9M i/s | 936K i/s | **2.0x** |
 
-<sup>Ruby 4.0.1, Apple M1 Pro. Reproduce: `bundle exec ruby benchmark/run.rb`</sup>
+<sup>Ruby 4.0.5, Apple M1 Pro. 2.8× geomean; each row verified to produce output identical to Rails `class_names`. Reproduce: `bundle exec ruby benchmark/vs_rails.rb`</sup>
 
 ### More feature-rich than `class_names`
 
@@ -53,7 +54,7 @@ For Rails integration (adds `clsx` and `cn` helpers to all views), see [clsx-rai
 |---|---|---|
 | Conditional classes | ✅ | ✅ |
 | Auto-deduplication | ✅ | ✅ |
-| 2–3× faster | ✅ | ❌ |
+| 2–4× faster | ✅ | ❌ |
 | Returns `nil` when empty | ✅ | ❌ (returns `""`) |
 | Complex hash keys | ✅ | ❌ |
 | Framework-agnostic | ✅ | ❌ |
