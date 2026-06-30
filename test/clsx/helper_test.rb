@@ -427,5 +427,77 @@ module Clsx
     def test_cn_alias_delegates_to_clsx
       assert_equal Clsx['foo', bar: true], Cn['foo', bar: true]
     end
+    # --- Branch coverage: fast-path edges and fallbacks ---
+
+    def test_single_token_string_returned_as_is
+      assert_equal 'foo', clsx('foo')
+    end
+
+    def test_empty_base_string_with_hash
+      assert_equal 'active', clsx('', active: true)
+    end
+
+    def test_single_hash_symbol_then_string_key_fallback
+      assert_equal 'foo bar', clsx(foo: true, 'bar' => true)
+    end
+
+    def test_single_hash_three_string_keys
+      assert_equal 'a b c', clsx('a' => true, 'b' => true, 'c' => true)
+    end
+
+    def test_single_hash_tab_in_symbol_key
+      assert_equal 'a b', clsx("a\tb": true)
+    end
+
+    def test_str_hash_string_then_symbol_key_fallback
+      assert_equal 'base foo bar', clsx('base', 'foo' => true, bar: true)
+    end
+
+    def test_str_hash_symbol_then_string_key_fallback
+      assert_equal 'base foo bar', clsx('base', foo: true, 'bar' => true)
+    end
+
+    def test_str_hash_empty_string_key_skipped
+      assert_equal 'base foo', clsx('base', '' => true, 'foo' => true)
+    end
+
+    def test_str_hash_string_key_with_space_fallback
+      assert_equal 'base a b', clsx('base', 'a b' => true)
+    end
+
+    def test_str_hash_tab_in_symbol_key
+      assert_equal 'base a b', clsx('base', "a\tb": true)
+    end
+
+    def test_str_hash_full_whitespace_only_base
+      assert_equal 'foo', clsx('   ', foo: true)
+    end
+
+    def test_str_hash_full_falsy_value_skipped
+      assert_equal 'a b bar', clsx('a b', foo: false, bar: true)
+    end
+
+    def test_str_hash_full_string_then_symbol_key_fallback
+      assert_equal 'a b c d', clsx('a b', 'c' => true, d: true)
+    end
+
+    def test_str_hash_full_symbol_then_string_key_fallback
+      assert_equal 'a b c d', clsx('a b', c: true, 'd' => true)
+    end
+
+    def test_str_hash_full_empty_string_key_skipped
+      assert_equal 'a b c', clsx('a b', '' => true, 'c' => true)
+    end
+
+    def test_walk_hash_empty_string_key_skipped
+      assert_equal 'foo bar', clsx({ '' => true, 'foo' => true }, 'bar')
+    end
+
+    def test_walk_hash_empty_to_s_object_key_skipped
+      empty_obj = Object.new
+      def empty_obj.to_s = ''
+
+      assert_equal 'foo', clsx({ empty_obj => true }, 'foo')
+    end
   end
 end
