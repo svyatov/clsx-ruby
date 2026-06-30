@@ -47,7 +47,8 @@ module Clsx
       if args.size == 2 && args[0].is_a?(String) && args[1].is_a?(Hash)
         str = args[0]
         return clsx_hash(args[1]) if str.empty?
-        return clsx_str_hash_full(str, args[1]) if str.include?(' ') || str.include?("\t") || str.include?("\n") # rubocop:disable Layout/EmptyLineAfterGuardClause
+        return clsx_str_hash_full(str, args[1]) if str.include?(' ') || str.include?("\t") || str.include?("\n")
+
         return clsx_str_hash(str, args[1])
       end
 
@@ -69,7 +70,8 @@ module Clsx
     def clsx_one(arg)
       if arg.is_a?(Symbol)
         s = arg.name
-        return s unless s.include?(' ') || s.include?("\t") || s.include?("\n") # rubocop:disable Layout/EmptyLineAfterGuardClause
+        return s unless s.include?(' ') || s.include?("\t") || s.include?("\n")
+
         return clsx_dedup_str(s)
       end
 
