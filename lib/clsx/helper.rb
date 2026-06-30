@@ -114,6 +114,7 @@ module Clsx
       return nil if hash.empty?
 
       buf = nil
+      owned = false
       key_type = nil
 
       hash.each do |key, value|
@@ -126,7 +127,15 @@ module Clsx
           s = key.name
           return clsx_hash_full(hash) if s.include?(' ')
 
-          buf ? (buf << ' ' << s) : (buf = s.dup)
+          # Defer the dup: hold the first token by reference (frozen name or the
+          # caller's key) and only copy when a second token must be appended.
+          if buf
+            buf = buf.dup unless owned
+            owned = true
+            buf << ' ' << s
+          else
+            buf = s
+          end
         elsif key.is_a?(String)
           next if key.empty?
 
@@ -134,7 +143,13 @@ module Clsx
           return clsx_hash_full(hash) if key.include?(' ')
 
           key_type = :string
-          buf ? (buf << ' ' << key) : (buf = key.dup)
+          if buf
+            buf = buf.dup unless owned
+            owned = true
+            buf << ' ' << key
+          else
+            buf = key
+          end
         else
           return clsx_hash_full(hash)
         end
