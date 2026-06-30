@@ -29,21 +29,23 @@ module Clsx
 
       if args.size == 1
         arg = args[0]
-        # Inline the dominant single-String path so plain strings skip the
-        # clsx_one dispatch. Non-strings fall through to clsx_one, which no
-        # longer re-checks String (this method already ruled it out).
-        unless arg.is_a?(String)
-          return clsx_one(arg)
+        # Inline the two dominant single-arg shapes (String, Hash) so they skip
+        # the clsx_one dispatch. Other types fall through to clsx_one, which no
+        # longer re-checks String or Hash (already ruled out here).
+        if arg.is_a?(String)
+          return nil if arg.empty?
+          return arg unless arg.include?(' ') || arg.include?("\t") || arg.include?("\n")
+
+          parts = arg.split
+          return nil if parts.empty?
+          return parts[0] if parts.length == 1
+          return arg if !parts.uniq! && parts.length == arg.count(' ') + 1 # rubocop:disable Layout/EmptyLineAfterGuardClause
+          return parts.join(' ')
         end
 
-        return nil if arg.empty?
-        return arg unless arg.include?(' ') || arg.include?("\t") || arg.include?("\n")
+        return clsx_hash(arg) if arg.is_a?(Hash)
 
-        parts = arg.split
-        return nil if parts.empty?
-        return parts[0] if parts.length == 1
-        return arg if !parts.uniq! && parts.length == arg.count(' ') + 1 # rubocop:disable Layout/EmptyLineAfterGuardClause
-        return parts.join(' ')
+        return clsx_one(arg)
       end
 
       if args.size == 2 && args[0].is_a?(String) && args[1].is_a?(Hash)
@@ -63,10 +65,10 @@ module Clsx
 
     private
 
-    # Single-argument fast path for non-String descriptors. The String case is
-    # handled inline in {#clsx}, so this method never sees a String.
+    # Single-argument fast path for descriptors other than String and Hash,
+    # both of which are handled inline in {#clsx} — this method never sees them.
     #
-    # @param arg [Object] single non-String class descriptor
+    # @param arg [Object] single non-String, non-Hash class descriptor
     # @return [String, nil]
     def clsx_one(arg)
       if arg.is_a?(Symbol)
@@ -74,8 +76,6 @@ module Clsx
         return s unless s.include?(' ') || s.include?("\t") || s.include?("\n") # rubocop:disable Layout/EmptyLineAfterGuardClause
         return clsx_dedup_str(s)
       end
-
-      return clsx_hash(arg) if arg.is_a?(Hash)
 
       if arg.is_a?(Array)
         return nil if arg.empty?
