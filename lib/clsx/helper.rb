@@ -36,11 +36,7 @@ module Clsx
           return nil if arg.empty?
           return arg unless arg.include?(' ') || arg.include?("\t") || arg.include?("\n")
 
-          parts = arg.split
-          return nil if parts.empty?
-          return parts[0] if parts.length == 1
-          return arg if !parts.uniq! && parts.length == arg.count(' ') + 1 # rubocop:disable Layout/EmptyLineAfterGuardClause
-          return parts.join(' ')
+          return clsx_dedup_str(arg)
         end
 
         return clsx_hash(arg) if arg.is_a?(Hash)
