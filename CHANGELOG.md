@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Faster `clsx`/`cn` for the common single-string and hash inputs via dispatch elision and fewer allocations (no API or output change)
+
 ## v1.1.3
 
 ### Fixed
