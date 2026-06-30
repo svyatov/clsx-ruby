@@ -26,7 +26,25 @@ module Clsx
     #   clsx(%w[foo bar], hidden: true)         # => "foo bar hidden"
     def clsx(*args)
       return nil if args.empty?
-      return clsx_one(args[0]) if args.size == 1
+
+      if args.size == 1
+        arg = args[0]
+        # Inline the dominant single-String path so plain strings skip the
+        # clsx_one dispatch. Non-strings fall through to clsx_one, which no
+        # longer re-checks String (this method already ruled it out).
+        unless arg.is_a?(String)
+          return clsx_one(arg)
+        end
+
+        return nil if arg.empty?
+        return arg unless arg.include?(' ') || arg.include?("\t") || arg.include?("\n")
+
+        parts = arg.split
+        return nil if parts.empty?
+        return parts[0] if parts.length == 1
+        return arg if !parts.uniq! && parts.length == arg.count(' ') + 1 # rubocop:disable Layout/EmptyLineAfterGuardClause
+        return parts.join(' ')
+      end
 
       if args.size == 2 && args[0].is_a?(String) && args[1].is_a?(Hash)
         str = args[0]
@@ -45,23 +63,12 @@ module Clsx
 
     private
 
-    # Single-argument fast path — dispatches by type, handles multi-token
-    # string dedup without allocating a walker Hash for simple cases.
+    # Single-argument fast path for non-String descriptors. The String case is
+    # handled inline in {#clsx}, so this method never sees a String.
     #
-    # @param arg [Object] single class descriptor
+    # @param arg [Object] single non-String class descriptor
     # @return [String, nil]
     def clsx_one(arg)
-      if arg.is_a?(String)
-        return nil if arg.empty?
-        return arg unless arg.include?(' ') || arg.include?("\t") || arg.include?("\n")
-
-        parts = arg.split
-        return nil if parts.empty?
-        return parts[0] if parts.length == 1
-        return arg if !parts.uniq! && parts.length == arg.count(' ') + 1 # rubocop:disable Layout/EmptyLineAfterGuardClause
-        return parts.join(' ')
-      end
-
       if arg.is_a?(Symbol)
         s = arg.name
         return s unless s.include?(' ') || s.include?("\t") || s.include?("\n") # rubocop:disable Layout/EmptyLineAfterGuardClause
