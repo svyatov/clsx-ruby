@@ -103,8 +103,12 @@ module Clsx
       parts.join(' ')
     end
 
-    # Hash-only fast path using string buffer. Falls back to Hash dedup
-    # on mixed key types, multi-token keys, or complex keys.
+    # Hash-only fast path using a string buffer, skipping cross-key dedup.
+    # Hash keys are unique, so the only way two distinct keys collide on a
+    # class name is a Symbol and a String of the same name (+:foo+ and
+    # +"foo"+ both yield "foo"). Hence on mixed key types — plus multi-token
+    # or complex (Array/Hash) keys — it falls back to {#clsx_hash_full}, which
+    # deduplicates.
     #
     # @param hash [Hash] class-name => condition pairs
     # @return [String, nil]
