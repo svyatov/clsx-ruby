@@ -5,6 +5,31 @@
 
 Inspired by the JavaScript [clsx](https://github.com/lukeed/clsx) package. Works with any Ruby codebase.
 
+## Contents
+
+- [Quick Start](#quick-start)
+- [Why clsx-ruby?](#why-clsx-ruby)
+  - [Blazing fast](#blazing-fast)
+  - [More feature-rich than `class_names`](#more-feature-rich-than-class_names)
+  - [Tiny footprint](#tiny-footprint)
+- [Usage](#usage)
+  - [Bracket API](#bracket-api-recommended)
+  - [Short alias](#short-alias)
+  - [Mixin](#mixin)
+  - [Module methods](#module-methods)
+  - [Input types](#input-types)
+- [Framework Integration](#framework-integration)
+  - [Rails](#rails)
+  - [Tailwind CSS](#tailwind-css)
+    - [Merging conflicting utilities](#merging-conflicting-utilities)
+  - [ViewComponent](#viewcomponent)
+  - [Phlex](#phlex)
+  - [Sinatra](#sinatra)
+- [Differences from JavaScript clsx](#differences-from-javascript-clsx)
+- [Development](#development)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Quick Start
 
 ```bash
@@ -14,7 +39,7 @@ bundle add clsx-ruby
 Or add it manually to the Gemfile:
 
 ```ruby
-gem 'clsx-ruby', '~> 1.1'
+gem 'clsx-ruby', '~> 1.2'
 ```
 
 Then use it:
@@ -25,10 +50,6 @@ require 'clsx'
 Clsx['btn', 'btn-primary', active: is_active, disabled: is_disabled]
 # => "btn btn-primary active" (when is_active is truthy, is_disabled is falsy)
 ```
-
-## Rails Integration
-
-For Rails integration (adds `clsx` and `cn` helpers to all views), see [clsx-rails](https://github.com/svyatov/clsx-rails).
 
 ## Why clsx-ruby?
 
@@ -148,14 +169,15 @@ Clsx['foo', ['bar', { baz: false, bat: nil }, ['hello', ['world']]], 'cya']
 # => 'foo bar hello world cya'
 ```
 
-## Framework Examples
+## Framework Integration
 
 clsx is framework-agnostic. Any Ruby view object — ViewComponent, Phlex, or a plain object —
-gets `clsx`/`cn` by including `Clsx::Helper`; no adapter needed. For Rails ERB views, the
-companion [clsx-rails](https://github.com/svyatov/clsx-rails) gem auto-loads the helpers into
-ActionView.
+gets `clsx`/`cn` by including `Clsx::Helper`; no adapter needed.
 
 ### Rails
+
+The companion [clsx-rails](https://github.com/svyatov/clsx-rails) gem auto-loads `clsx`/`cn`
+into every view. You can also use the bracket API directly in ERB:
 
 ```erb
 <%= tag.div class: Clsx['foo', 'baz', 'is-active': @active] do %>
@@ -163,44 +185,9 @@ ActionView.
 <% end %>
 ```
 
-### Sinatra
-
-```ruby
-erb :"<div class='#{Clsx['nav', active: @active]}'>...</div>"
-```
-
-### ViewComponent
-
-Include the mixin once in your base component instead of per component:
-
-```ruby
-class ApplicationComponent < ViewComponent::Base
-  include Clsx::Helper
-end
-```
-
-Accept a caller-supplied `class:` and merge it — clsx dedupes across every argument, so
-callers can extend or repeat classes safely:
-
-```ruby
-class AlertComponent < ApplicationComponent
-  def initialize(variant: :info, dismissible: false, class: nil)
-    @variant = variant
-    @dismissible = dismissible
-    @html_class = binding.local_variable_get(:class) # `class` is a Ruby keyword
-  end
-
-  def classes
-    clsx("alert", "alert-#{@variant}", @html_class, dismissible: @dismissible)
-  end
-end
-```
-
-```erb
-<div class="<%= classes %>">...</div>
-```
-
 ### Tailwind CSS
+
+#### Conditional utilities
 
 ```ruby
 class NavLink < ViewComponent::Base
@@ -254,6 +241,37 @@ twm('px-2 px-4')       # => "px-4"
 Clsx.twm('px-2 px-4')  # => "px-4"
 ```
 
+### ViewComponent
+
+Include the mixin once in your base component instead of per component:
+
+```ruby
+class ApplicationComponent < ViewComponent::Base
+  include Clsx::Helper
+end
+```
+
+Accept a caller-supplied `class:` and merge it — clsx dedupes across every argument, so
+callers can extend or repeat classes safely:
+
+```ruby
+class AlertComponent < ApplicationComponent
+  def initialize(variant: :info, dismissible: false, class: nil)
+    @variant = variant
+    @dismissible = dismissible
+    @html_class = binding.local_variable_get(:class) # `class` is a Ruby keyword
+  end
+
+  def classes
+    clsx("alert", "alert-#{@variant}", @html_class, dismissible: @dismissible)
+  end
+end
+```
+
+```erb
+<div class="<%= classes %>">...</div>
+```
+
 ### Phlex
 
 Include the mixin once in your base component, then merge caller-supplied attributes —
@@ -280,6 +298,12 @@ end
 Phlex's own `class: [...]` arrays and `mix` cover simple cases. Reach for clsx when you want
 hash-conditional syntax (`pill: @pill`) or cross-argument dedup when merging caller-supplied
 classes.
+
+### Sinatra
+
+```ruby
+erb :"<div class='#{Clsx['nav', active: @active]}'>...</div>"
+```
 
 ## Differences from JavaScript clsx
 
@@ -314,7 +338,7 @@ classes.
 ```bash
 bin/setup                             # install dependencies
 bundle exec rake test                 # run tests
-bundle exec ruby benchmark/run.rb    # run benchmarks
+bundle exec ruby benchmark/vs_rails.rb # run benchmarks
 ```
 
 ## Contributing
