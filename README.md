@@ -205,6 +205,40 @@ class NavLink < ViewComponent::Base
 end
 ```
 
+#### Merging conflicting utilities
+
+`clsx`/`cn` keep every class, so conflicting Tailwind utilities both survive:
+
+```ruby
+Clsx['px-2 px-4'] # => "px-2 px-4"
+```
+
+For conflict resolution, opt into the [`tailwind_merge`](https://github.com/gjtorikian/tailwind_merge)
+gem. Add it to your `Gemfile` (clsx-ruby itself stays dependency-free), then require the
+integration once at boot:
+
+```ruby
+# config/initializers/clsx.rb
+require 'clsx/tailwind_merge'
+
+# Optional: configure the merger (prefix, cache size, custom theme, …)
+Clsx.merger = TailwindMerge::Merger.new(config: { prefix: 'tw' })
+```
+
+This adds a merged variant — `twm` / `Twm[]` — the last conflicting utility wins.
+`clsx`/`cn` stay pure; only `twm`/`Twm` merge:
+
+```ruby
+Twm['px-2 px-4']                       # => "px-4"
+Twm['p-4', 'p-2', 'bg-red', 'bg-blue'] # => "p-2 bg-blue"
+Clsx['px-2 px-4']                      # => "px-2 px-4" (unchanged)
+
+# Also available as a mixin method and a module method:
+include Clsx::Helper
+twm('px-2 px-4')       # => "px-4"
+Clsx.twm('px-2 px-4')  # => "px-4"
+```
+
 ### Phlex
 
 ```ruby
