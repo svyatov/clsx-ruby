@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Faster `clsx`/`cn` for the common single-string and hash inputs via dispatch elision and fewer allocations (no API or output change)
+- Faster `clsx`/`cn` for the common single-string and hash inputs via dispatch elision, fewer allocations, and cheaper whitespace scanning (no API or output change)
 
 ## v1.1.3
 
