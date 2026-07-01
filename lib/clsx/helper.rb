@@ -7,6 +7,11 @@ module Clsx
   #   include Clsx::Helper
   #   clsx('btn', active: @active)  # => "btn active"
   module Helper
+    # Single-pass scan for tab/newline. Collapses two consecutive `include?`
+    # scans into one regex match (no MatchData alloc). Space is checked
+    # separately first so the common "has a space" case still short-circuits.
+    TAB_OR_NEWLINE = /[\t\n]/
+
     # Build a CSS class string from an arbitrary mix of arguments.
     #
     # Falsy values (+nil+, +false+) and standalone +true+ are discarded.
@@ -34,7 +39,7 @@ module Clsx
         # longer re-checks String or Hash (already ruled out here).
         if arg.is_a?(String)
           return nil if arg.empty?
-          return arg unless arg.include?(' ') || arg.include?("\t") || arg.include?("\n")
+          return arg unless arg.include?(' ') || arg.match?(TAB_OR_NEWLINE)
 
           return clsx_dedup_str(arg)
         end
@@ -47,7 +52,7 @@ module Clsx
       if args.size == 2 && args[0].is_a?(String) && args[1].is_a?(Hash)
         str = args[0]
         return clsx_hash(args[1]) if str.empty?
-        return clsx_str_hash_full(str, args[1]) if str.include?(' ') || str.include?("\t") || str.include?("\n")
+        return clsx_str_hash_full(str, args[1]) if str.include?(' ') || str.match?(TAB_OR_NEWLINE)
 
         return clsx_str_hash(str, args[1])
       end
@@ -70,7 +75,7 @@ module Clsx
     def clsx_one(arg)
       if arg.is_a?(Symbol)
         s = arg.name
-        return s unless s.include?(' ') || s.include?("\t") || s.include?("\n")
+        return s unless s.include?(' ') || s.match?(TAB_OR_NEWLINE)
 
         return clsx_dedup_str(s)
       end
@@ -161,7 +166,7 @@ module Clsx
       end
 
       return nil unless buf
-      return clsx_dedup_str(buf) if buf.include?("\t") || buf.include?("\n")
+      return clsx_dedup_str(buf) if buf.match?(TAB_OR_NEWLINE)
 
       buf
     end
@@ -221,7 +226,7 @@ module Clsx
         end
       end
 
-      return clsx_dedup_str(buf) if buf.include?("\t") || buf.include?("\n")
+      return clsx_dedup_str(buf) if buf.match?(TAB_OR_NEWLINE)
 
       buf
     end
@@ -254,7 +259,7 @@ module Clsx
 
           key_type = :symbol
           s = key.name
-          return clsx_str_hash_full_walk(parts, hash) if s.include?(' ') || s.include?("\t") || s.include?("\n")
+          return clsx_str_hash_full_walk(parts, hash) if s.include?(' ') || s.match?(TAB_OR_NEWLINE)
 
           next if parts.include?(s)
 
@@ -264,7 +269,7 @@ module Clsx
 
           key_type = :string
           next if key.empty?
-          return clsx_str_hash_full_walk(parts, hash) if key.include?(' ') || key.include?("\t") || key.include?("\n")
+          return clsx_str_hash_full_walk(parts, hash) if key.include?(' ') || key.match?(TAB_OR_NEWLINE)
 
           next if parts.include?(key)
 
@@ -351,7 +356,7 @@ module Clsx
       return nil if seen.empty?
 
       result = seen.keys.join(' ')
-      return result if result.count(' ') + 1 == seen.size && !result.include?("\t") && !result.include?("\n")
+      return result if result.count(' ') + 1 == seen.size && !result.match?(TAB_OR_NEWLINE)
 
       normalized = result.split.uniq.join(' ')
       normalized.empty? ? nil : normalized
