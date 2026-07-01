@@ -150,6 +150,11 @@ Clsx['foo', ['bar', { baz: false, bat: nil }, ['hello', ['world']]], 'cya']
 
 ## Framework Examples
 
+clsx is framework-agnostic. Any Ruby view object — ViewComponent, Phlex, or a plain object —
+gets `clsx`/`cn` by including `Clsx::Helper`; no adapter needed. For Rails ERB views, the
+companion [clsx-rails](https://github.com/svyatov/clsx-rails) gem auto-loads the helpers into
+ActionView.
+
 ### Rails
 
 ```erb
@@ -166,17 +171,27 @@ erb :"<div class='#{Clsx['nav', active: @active]}'>...</div>"
 
 ### ViewComponent
 
-```ruby
-class AlertComponent < ViewComponent::Base
-  include Clsx::Helper
+Include the mixin once in your base component instead of per component:
 
-  def initialize(variant: :info, dismissible: false)
+```ruby
+class ApplicationComponent < ViewComponent::Base
+  include Clsx::Helper
+end
+```
+
+Accept a caller-supplied `class:` and merge it — clsx dedupes across every argument, so
+callers can extend or repeat classes safely:
+
+```ruby
+class AlertComponent < ApplicationComponent
+  def initialize(variant: :info, dismissible: false, class: nil)
     @variant = variant
     @dismissible = dismissible
+    @html_class = binding.local_variable_get(:class) # `class` is a Ruby keyword
   end
 
   def classes
-    clsx("alert", "alert-#{@variant}", dismissible: @dismissible)
+    clsx("alert", "alert-#{@variant}", @html_class, dismissible: @dismissible)
   end
 end
 ```
@@ -241,20 +256,30 @@ Clsx.twm('px-2 px-4')  # => "px-4"
 
 ### Phlex
 
-```ruby
-class Badge < Phlex::HTML
-  include Clsx::Helper
+Include the mixin once in your base component, then merge caller-supplied attributes —
+clsx dedupes across every argument:
 
-  def initialize(color: :blue, pill: false)
+```ruby
+class ApplicationComponent < Phlex::HTML
+  include Clsx::Helper
+end
+
+class Badge < ApplicationComponent
+  def initialize(color: :blue, pill: false, **attributes)
     @color = color
     @pill = pill
+    @attributes = attributes
   end
 
   def view_template
-    span(class: clsx("badge", "badge-#{@color}", pill: @pill)) { yield }
+    span(class: clsx("badge", "badge-#{@color}", @attributes[:class], pill: @pill)) { yield }
   end
 end
 ```
+
+Phlex's own `class: [...]` arrays and `mix` cover simple cases. Reach for clsx when you want
+hash-conditional syntax (`pill: @pill`) or cross-argument dedup when merging caller-supplied
+classes.
 
 ## Differences from JavaScript clsx
 
