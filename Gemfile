@@ -14,6 +14,7 @@ gem 'minitest', '~> 6.0'
 gem 'rake', '~> 13.3'
 gem 'rubocop', '~> 1.84'
 gem 'stackprof', '~> 0.2'
+gem 'tailwind_merge', '~> 1.3'
 
 gem 'simplecov', '~> 0.22', require: false
 gem 'simplecov-cobertura', '~> 3.1', require: false

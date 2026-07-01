@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Optional Tailwind class merging via the `tailwind_merge` gem: `require 'clsx/tailwind_merge'` adds `twm`/`Twm[]` (and `Clsx.twm`) that resolve conflicting utilities (e.g. `px-2 px-4` → `px-4`). `clsx`/`cn` stay pure; the core gem stays zero-dependency unless the integration is required. Configure with `Clsx.merger = TailwindMerge::Merger.new(config: {...})`.
+
 ### Changed
 
 - Faster `clsx`/`cn` for the common single-string and hash inputs via dispatch elision, fewer allocations, and cheaper whitespace scanning (no API or output change)
